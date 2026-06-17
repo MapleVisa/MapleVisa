@@ -64,8 +64,18 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const buffer = Buffer.from(await file.arrayBuffer());
   const ext = ALLOWED_MIME[file.type];
   const fileName = `${randomUUID()}.${ext}`;
-  // In production this returns a Blob URL; in dev it returns the local filename.
-  const storedName = await saveFile(params.id, fileName, buffer, file.type);
+
+  let storedName: string;
+  try {
+    // In production this returns a Blob URL; in dev it returns the local filename.
+    storedName = await saveFile(params.id, fileName, buffer, file.type);
+  } catch (e: any) {
+    console.error("[upload] saveFile failed:", e);
+    const msg = process.env.BLOB_READ_WRITE_TOKEN
+      ? `Could not store the file: ${e?.message || "storage error"}`
+      : "File storage is not configured. Connect a Vercel Blob store and redeploy.";
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 
   const doc = await prisma.document.create({
     data: {
