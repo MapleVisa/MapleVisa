@@ -1,0 +1,28 @@
+# dependencies
+node_modules
+
+# next.js
+.next
+out
+*.tsbuildinfo
+
+# caches
+.cache
+
+# local database (SQLite, dev only)
+dev.db
+dev.db-journal
+
+# secrets / env — never commit these
+.env
+.env*.local
+
+# uploaded files (stored outside the repo)
+/uploads
+
+# misc
+*.log
+.DS_Store
+
+# stray local chat-transcript copy (not part of the project)
+/E--myfiles-Myproject
