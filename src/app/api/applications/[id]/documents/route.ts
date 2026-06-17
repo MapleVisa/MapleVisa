@@ -63,8 +63,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
   const buffer = Buffer.from(await file.arrayBuffer());
   const ext = ALLOWED_MIME[file.type];
-  const storedName = `${randomUUID()}.${ext}`;
-  await saveFile(params.id, storedName, buffer);
+  const fileName = `${randomUUID()}.${ext}`;
+  // In production this returns a Blob URL; in dev it returns the local filename.
+  const storedName = await saveFile(params.id, fileName, buffer, file.type);
 
   const doc = await prisma.document.create({
     data: {
