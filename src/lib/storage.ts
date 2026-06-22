@@ -39,13 +39,13 @@ export function sniffMime(buf: Buffer, claimedMime: string): string | null {
   return detected;
 }
 
-import { r2Configured, r2Put, r2Get, r2Delete, r2List } from "./r2";
+import { s3Configured, s3Put, s3Get, s3Delete, s3List } from "./s3";
 
 // Storage backend selection (in priority order):
-//   1. Cloudflare R2  — PRIVATE bucket, recommended for production.
+//   1. S3-compatible  — PRIVATE bucket (Supabase, R2, Backblaze, S3…). Recommended.
 //   2. Vercel Blob    — legacy/public; still readable for already-stored files.
 //   3. Local disk     — zero-setup dev fallback.
-const useBlob = !r2Configured && !!process.env.BLOB_READ_WRITE_TOKEN;
+const useBlob = !s3Configured && !!process.env.BLOB_READ_WRITE_TOKEN;
 
 function appDir(applicationId: string) {
   return path.join(process.cwd(), ROOT, applicationId);
@@ -66,9 +66,9 @@ export async function saveFile(
   data: Buffer,
   mimeType?: string
 ): Promise<string> {
-  if (r2Configured) {
+  if (s3Configured) {
     const key = `${applicationId}/${storedName}`;
-    await r2Put(key, data, mimeType);
+    await s3Put(key, data, mimeType);
     return key;
   }
   if (useBlob) {
@@ -92,8 +92,8 @@ export async function readFile(applicationId: string, storedName: string): Promi
     if (!res.ok) throw new Error("Blob fetch failed");
     return Buffer.from(await res.arrayBuffer());
   }
-  if (r2Configured) {
-    return r2Get(storedName);
+  if (s3Configured) {
+    return s3Get(storedName);
   }
   return fs.readFile(path.join(appDir(applicationId), storedName));
 }
@@ -103,8 +103,8 @@ export async function deleteFile(_applicationId: string, storedName: string) {
     if (isUrl(storedName)) {
       const { del } = await import("@vercel/blob");
       await del(storedName);
-    } else if (r2Configured) {
-      await r2Delete(storedName);
+    } else if (s3Configured) {
+      await s3Delete(storedName);
     } else {
       await fs.unlink(path.join(appDir(_applicationId), storedName));
     }
@@ -117,9 +117,9 @@ export async function deleteFile(_applicationId: string, storedName: string) {
 // withdrawn or deleted — its documents are no longer needed.
 export async function deleteAppFiles(applicationId: string) {
   try {
-    if (r2Configured) {
-      const keys = await r2List(`${applicationId}/`);
-      await Promise.all(keys.map((k) => r2Delete(k)));
+    if (s3Configured) {
+      const keys = await s3List(`${applicationId}/`);
+      await Promise.all(keys.map((k) => s3Delete(k)));
     } else if (useBlob) {
       const { list, del } = await import("@vercel/blob");
       const { blobs } = await list({ prefix: `${applicationId}/` });

@@ -12,7 +12,8 @@ Express Entry, Provincial Nominee, Family Sponsorship and Business / Start-Up Vi
 - **Next.js 14** (App Router) + **React 18** + **TypeScript**
 - **Tailwind CSS** for a clean, professional UI
 - **Prisma** ORM + **PostgreSQL** (Neon in production)
-- **Cloudflare R2** (private bucket) for document storage — files are never public
+- **S3-compatible private storage** for documents (Supabase Storage free tier by
+  default; R2/Backblaze/S3 by swapping env vars) — files are never public
 - **JWT session auth** (`jose`) in httpOnly cookies + **bcrypt** password hashing
 - **AI** via any OpenAI-compatible provider (Mistral by default) — multilingual form
   autofill, eligibility advisor, and vision-based document verification
@@ -38,23 +39,24 @@ host and keep `sslmode=require`).
 
 1. Push this repo to GitHub.
 2. Create a free **Neon** project → Connect → copy the connection string.
-3. Create a **private Cloudflare R2** bucket and an API token (Object Read & Write);
-   note the account ID, access key id, and secret.
+3. Create a **private bucket** on any S3-compatible store and its access keys. Free,
+   no-card option: **Supabase Storage** (Project Settings → Storage → S3 connection).
 4. From a local checkout pointed at the Neon DB, run `npx prisma db push` then
    `npm run db:seed` once to create tables + demo accounts.
 5. On **vercel.com** → New Project → import the GitHub repo.
 6. Add the environment variables from `.env.example` (Project → Settings → Environment
    Variables): `DATABASE_URL`, `AUTH_SECRET`, `AI_PROVIDER`, `AI_BASE_URL`, `AI_API_KEY`,
-   `AI_MODEL`, `AI_VISION_MODEL`, `MAX_UPLOAD_MB`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`,
-   `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, and (recommended) `UPSTASH_REDIS_REST_URL` +
-   `UPSTASH_REDIS_REST_TOKEN` for rate limiting.
+   `AI_MODEL`, `AI_VISION_MODEL`, `MAX_UPLOAD_MB`, `S3_ENDPOINT`, `S3_REGION`,
+   `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, and (recommended)
+   `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` for rate limiting.
 7. Deploy. Every push to the main branch redeploys automatically.
 
-> 🔒 **Document storage is private.** With R2 configured, uploaded documents live in a
-> private bucket and are streamed only through the auth-checked `/api/documents/[id]`
-> route — there are no public file URLs. If R2 is not set, uploads fall back to Vercel
-> Blob (public URLs — avoid for sensitive documents) or, in dev, the local `./uploads`
-> folder.
+> 🔒 **Document storage is private.** With an S3-compatible store configured, uploaded
+> documents live in a private bucket and are streamed only through the auth-checked
+> `/api/documents/[id]` route — there are no public file URLs. The same code works with
+> Supabase, R2, Backblaze, or AWS S3 (just change the env vars). If none is set, uploads
+> fall back to Vercel Blob (public URLs — avoid for sensitive documents) or, in dev, the
+> local `./uploads` folder.
 
 ### Demo accounts (created by the seed)
 
