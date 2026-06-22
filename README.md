@@ -11,7 +11,7 @@ Express Entry, Provincial Nominee, Family Sponsorship and Business / Start-Up Vi
 
 - **Next.js 14** (App Router) + **React 18** + **TypeScript**
 - **Tailwind CSS** for a clean, professional UI
-- **Prisma** ORM + **PostgreSQL** (Neon in production)
+- **Prisma** ORM + **PostgreSQL** (Supabase in production)
 - **S3-compatible private storage** for documents (Supabase Storage free tier by
   default; R2/Backblaze/S3 by swapping env vars) — files are never public
 - **JWT session auth** (`jose`) in httpOnly cookies + **bcrypt** password hashing
@@ -28,9 +28,9 @@ npm run db:seed        # seed demo accounts
 npm run dev            # start on http://localhost:3000
 ```
 
-You need a PostgreSQL database. The easiest free option is **Neon**: create a
-project, then copy its connection string into `DATABASE_URL` (use the `-pooler`
-host and keep `sslmode=require`).
+You need a PostgreSQL database. The easiest free option is **Supabase**: create a
+project, then under **Connect → ORMs (Prisma)** copy both the pooled `DATABASE_URL`
+and the direct `DIRECT_URL` into your `.env`.
 
 > Run in **development** (`npm run dev`) locally. In production, session cookies are
 > `secure` and require HTTPS.
@@ -38,16 +38,17 @@ host and keep `sslmode=require`).
 ## Deploying to Vercel
 
 1. Push this repo to GitHub.
-2. Create a free **Neon** project → Connect → copy the connection string.
-3. Create a **private bucket** on any S3-compatible store and its access keys. Free,
-   no-card option: **Supabase Storage** (Project Settings → Storage → S3 connection).
-4. From a local checkout pointed at the Neon DB, run `npx prisma db push` then
+2. Create a free **Supabase** project → Connect → ORMs (Prisma) → copy `DATABASE_URL`
+   (pooled) and `DIRECT_URL` (direct).
+3. In the same Supabase project, create a **private Storage bucket** and S3 access keys
+   (Project Settings → Storage → S3 connection). Supabase covers both DB and storage.
+4. From a local checkout pointed at the Supabase DB, run `npx prisma db push` then
    `npm run db:seed` once to create tables + demo accounts.
 5. On **vercel.com** → New Project → import the GitHub repo.
 6. Add the environment variables from `.env.example` (Project → Settings → Environment
-   Variables): `DATABASE_URL`, `AUTH_SECRET`, `AI_PROVIDER`, `AI_BASE_URL`, `AI_API_KEY`,
-   `AI_MODEL`, `AI_VISION_MODEL`, `MAX_UPLOAD_MB`, `S3_ENDPOINT`, `S3_REGION`,
-   `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, and (recommended)
+   Variables): `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`, `AI_PROVIDER`, `AI_BASE_URL`,
+   `AI_API_KEY`, `AI_MODEL`, `AI_VISION_MODEL`, `MAX_UPLOAD_MB`, `S3_ENDPOINT`,
+   `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, and (recommended)
    `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` for rate limiting.
 7. Deploy. Every push to the main branch redeploys automatically.
 
