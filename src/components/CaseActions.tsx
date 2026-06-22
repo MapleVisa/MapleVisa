@@ -39,11 +39,11 @@ export default function CaseActions({
     router.refresh();
   }
 
+  // Validate (accept) and lawyer assignment live in the gated "Accept & assign"
+  // panel; this list covers the remaining review transitions.
   const adminActions = [
     { label: "Mark under review", payload: { status: "UNDER_REVIEW" }, show: ["SUBMITTED"], style: "btn-secondary" },
     { label: "Request more info", payload: { status: "NEEDS_INFO" }, show: ["SUBMITTED", "UNDER_REVIEW"], style: "btn-secondary", requireNote: true },
-    { label: "✓ Validate application", payload: { status: "VALIDATED" }, show: ["SUBMITTED", "UNDER_REVIEW", "NEEDS_INFO"], style: "btn-primary" },
-    { label: "⚖️ Assign to lawyer", payload: { assignLawyer: true, status: "WITH_LAWYER" }, show: ["VALIDATED"], style: "btn-primary" },
     { label: "Close / reject", payload: { status: "REJECTED" }, show: ["SUBMITTED", "UNDER_REVIEW", "NEEDS_INFO", "VALIDATED"], style: "btn-ghost" },
   ];
 

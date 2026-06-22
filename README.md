@@ -11,7 +11,8 @@ Express Entry, Provincial Nominee, Family Sponsorship and Business / Start-Up Vi
 
 - **Next.js 14** (App Router) + **React 18** + **TypeScript**
 - **Tailwind CSS** for a clean, professional UI
-- **Prisma** ORM + **MySQL** (TiDB Cloud Serverless in production)
+- **Prisma** ORM + **PostgreSQL** (Neon in production)
+- **Cloudflare R2** (private bucket) for document storage — files are never public
 - **JWT session auth** (`jose`) in httpOnly cookies + **bcrypt** password hashing
 - **AI** via any OpenAI-compatible provider (Mistral by default) — multilingual form
   autofill, eligibility advisor, and vision-based document verification
@@ -21,14 +22,14 @@ Express Entry, Provincial Nominee, Family Sponsorship and Business / Start-Up Vi
 ```bash
 cp .env.example .env   # then fill in DATABASE_URL, AUTH_SECRET, AI keys
 npm install            # install deps (also generates Prisma client)
-npx prisma db push     # create the tables in your MySQL/TiDB database
+npx prisma db push     # create the tables in your PostgreSQL database
 npm run db:seed        # seed demo accounts
 npm run dev            # start on http://localhost:3000
 ```
 
-You need a MySQL database. The easiest free option is **TiDB Cloud Serverless**
-(MySQL-compatible): create a cluster, then copy its **Prisma** connection string into
-`DATABASE_URL`.
+You need a PostgreSQL database. The easiest free option is **Neon**: create a
+project, then copy its connection string into `DATABASE_URL` (use the `-pooler`
+host and keep `sslmode=require`).
 
 > Run in **development** (`npm run dev`) locally. In production, session cookies are
 > `secure` and require HTTPS.
@@ -36,20 +37,24 @@ You need a MySQL database. The easiest free option is **TiDB Cloud Serverless**
 ## Deploying to Vercel
 
 1. Push this repo to GitHub.
-2. Create a free **TiDB Cloud Serverless** cluster → Connect → copy the **Prisma**
-   connection string.
-3. From a local checkout pointed at that DB, run `npx prisma db push` then
+2. Create a free **Neon** project → Connect → copy the connection string.
+3. Create a **private Cloudflare R2** bucket and an API token (Object Read & Write);
+   note the account ID, access key id, and secret.
+4. From a local checkout pointed at the Neon DB, run `npx prisma db push` then
    `npm run db:seed` once to create tables + demo accounts.
-4. On **vercel.com** → New Project → import the GitHub repo.
-5. Add the environment variables from `.env.example` (Project → Settings → Environment
+5. On **vercel.com** → New Project → import the GitHub repo.
+6. Add the environment variables from `.env.example` (Project → Settings → Environment
    Variables): `DATABASE_URL`, `AUTH_SECRET`, `AI_PROVIDER`, `AI_BASE_URL`, `AI_API_KEY`,
-   `AI_MODEL`, `AI_VISION_MODEL`, `MAX_UPLOAD_MB`.
-6. Deploy. Every push to the main branch redeploys automatically.
+   `AI_MODEL`, `AI_VISION_MODEL`, `MAX_UPLOAD_MB`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`,
+   `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, and (recommended) `UPSTASH_REDIS_REST_URL` +
+   `UPSTASH_REDIS_REST_TOKEN` for rate limiting.
+7. Deploy. Every push to the main branch redeploys automatically.
 
-> ⚠️ **File uploads on Vercel:** the document upload currently writes to local disk
-> (`/uploads`), which does **not** persist on Vercel's serverless filesystem. Switch to
-> blob storage (e.g. Vercel Blob or an S3-compatible bucket) before relying on uploads in
-> production. Everything else (auth, forms, AI, withdraw) works on Vercel as-is.
+> 🔒 **Document storage is private.** With R2 configured, uploaded documents live in a
+> private bucket and are streamed only through the auth-checked `/api/documents/[id]`
+> route — there are no public file URLs. If R2 is not set, uploads fall back to Vercel
+> Blob (public URLs — avoid for sensitive documents) or, in dev, the local `./uploads`
+> folder.
 
 ### Demo accounts (created by the seed)
 

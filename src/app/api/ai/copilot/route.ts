@@ -7,10 +7,15 @@ import { getProgram } from "@/lib/programs";
 import { saveConversation, type StoredMessage } from "@/lib/conversations";
 import { getLocale } from "@/i18n";
 import type { ChatMessage } from "@/lib/ai/types";
+import { rateLimit, tooMany } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Cap AI usage per user to control provider cost and abuse: 30 calls / 5 min.
+  const limit = await rateLimit(`ai:${user.id}`, 30, 300);
+  if (!limit.ok) return tooMany(limit.retryAfter);
 
   const ai = getAI();
   if (!ai.isConfigured()) {

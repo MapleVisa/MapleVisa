@@ -18,9 +18,16 @@ export default async function AppHeader({ user }: { user: SessionUser }) {
           <Logo href={isStaff ? "/admin" : "/dashboard"} />
           <nav className="hidden items-center gap-1 sm:flex">
             {isStaff ? (
-              <Link href="/admin" className="btn-ghost">
-                {t.nav.reviewQueue}
-              </Link>
+              <>
+                <Link href="/admin" className="btn-ghost">
+                  {t.nav.reviewQueue}
+                </Link>
+                {user.role === "ADMIN" && (
+                  <Link href="/admin/users" className="btn-ghost">
+                    Users
+                  </Link>
+                )}
+              </>
             ) : (
               <>
                 <Link href="/dashboard" className="btn-ghost">
@@ -28,6 +35,9 @@ export default async function AppHeader({ user }: { user: SessionUser }) {
                 </Link>
                 <Link href="/apply" className="btn-ghost">
                   {t.nav.startNew}
+                </Link>
+                <Link href="/messages" className="btn-ghost">
+                  Messages
                 </Link>
               </>
             )}

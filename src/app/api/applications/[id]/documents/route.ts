@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { ALLOWED_MIME, MAX_UPLOAD_BYTES, saveFile } from "@/lib/storage";
+import { ALLOWED_MIME, MAX_UPLOAD_BYTES, saveFile, sniffMime } from "@/lib/storage";
 
 async function canAccess(appId: string, userId: string, role: string) {
   const app = await prisma.application.findUnique({ where: { id: appId } });
@@ -62,13 +62,22 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const ext = ALLOWED_MIME[file.type];
+
+  // Trust the bytes, not the client-declared MIME: verify the file's real type.
+  const realMime = sniffMime(buffer, file.type);
+  if (!realMime) {
+    return NextResponse.json(
+      { error: "File content does not match an allowed type (PDF, JPG, PNG)." },
+      { status: 400 }
+    );
+  }
+  const ext = ALLOWED_MIME[realMime];
   const fileName = `${randomUUID()}.${ext}`;
 
   let storedName: string;
   try {
     // In production this returns a Blob URL; in dev it returns the local filename.
-    storedName = await saveFile(params.id, fileName, buffer, file.type);
+    storedName = await saveFile(params.id, fileName, buffer, realMime);
   } catch (e: any) {
     console.error("[upload] saveFile failed:", e);
     const msg = process.env.BLOB_READ_WRITE_TOKEN
@@ -84,7 +93,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       category,
       originalName: file.name.slice(0, 200),
       storedName,
-      mimeType: file.type,
+      mimeType: realMime,
       size: file.size,
     },
   });

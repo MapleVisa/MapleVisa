@@ -45,10 +45,22 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     }
   }
 
-  if (body?.assignLawyer === true) {
-    // Assign to the first available lawyer (or self if the user is a lawyer).
-    let lawyerId = user.role === "LAWYER" ? user.id : null;
-    if (!lawyerId) {
+  if (body?.assignLawyer === true || typeof body?.lawyerId === "string") {
+    // Prefer an explicitly chosen lawyer; fall back to self (lawyer taking a
+    // case) or the first available lawyer for backward compatibility.
+    let lawyerId: string | null = null;
+    if (typeof body?.lawyerId === "string" && body.lawyerId) {
+      const chosen = await prisma.user.findFirst({
+        where: { id: body.lawyerId, role: "LAWYER" },
+        select: { id: true },
+      });
+      if (!chosen) {
+        return NextResponse.json({ error: "Selected lawyer not found." }, { status: 400 });
+      }
+      lawyerId = chosen.id;
+    } else if (user.role === "LAWYER") {
+      lawyerId = user.id;
+    } else {
       const lawyer = await prisma.user.findFirst({ where: { role: "LAWYER" } });
       lawyerId = lawyer?.id ?? null;
     }

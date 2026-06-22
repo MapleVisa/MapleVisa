@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { createSession, hashPassword } from "@/lib/auth";
+import { rateLimit, clientIp, tooMany } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
+  // Limit account creation to curb spam/abuse: 5 per IP per hour.
+  const limit = await rateLimit(`signup:ip:${clientIp(req)}`, 5, 3600);
+  if (!limit.ok) return tooMany(limit.retryAfter);
+
   const body = await req.json().catch(() => null);
   const fullName = (body?.fullName || "").trim();
   const email = (body?.email || "").trim().toLowerCase();

@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -19,6 +19,8 @@ model User {
   applications Application[] @relation("OwnerApplications")
   lawyerCases  Application[] @relation("LawyerCases")
   conversations Conversation[]
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
 }
 
 // status: DRAFT | SUBMITTED | UNDER_REVIEW | NEEDS_INFO | VALIDATED | WITH_LAWYER | IN_PROCESSING | APPROVED | REJECTED
@@ -29,7 +31,7 @@ model Application {
   user        User     @relation("OwnerApplications", fields: [userId], references: [id], onDelete: Cascade)
   program     String // EE | PNP | SPONSOR | BUSINESS
   status      String   @default("DRAFT")
-  data        String   @db.LongText // JSON blob of all field values (set on create)
+  data        String   @db.Text // JSON blob of all field values (set on create)
   currentStep Int      @default(0)
   reviewNote  String?  @db.Text
   lawyerId    String?
@@ -41,9 +43,31 @@ model Application {
   events        ApplicationEvent[]
   documents     Document[]
   conversations Conversation[]
+  messages      Message[]
 
   @@index([userId])
   @@index([status])
+}
+
+// In-app message center. A message either targets a specific user (toUserId set —
+// e.g. staff → applicant) or the staff/team inbox (toUserId null — e.g. applicant
+// → staff). Optionally tied to an application for context.
+model Message {
+  id            String       @id @default(cuid())
+  fromUserId    String
+  fromUser      User         @relation("SentMessages", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId      String?
+  toUser        User?        @relation("ReceivedMessages", fields: [toUserId], references: [id], onDelete: Cascade)
+  applicationId String?
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  subject       String?
+  body          String       @db.Text
+  readAt        DateTime?
+  createdAt     DateTime     @default(now())
+
+  @@index([toUserId])
+  @@index([fromUserId])
+  @@index([applicationId])
 }
 
 // Saved AI chat threads so users can recall them later.
@@ -58,7 +82,7 @@ model Conversation {
   application   Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   sectionId     String?
   title         String       @default("New conversation")
-  messages      String       @db.LongText // JSON: [{ role, content, at }] (set on create)
+  messages      String       @db.Text // JSON: [{ role, content, at }] (set on create)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 

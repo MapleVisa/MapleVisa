@@ -2,10 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import StatusBadge from "@/components/StatusBadge";
+import MessageList from "@/components/MessageList";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { localizeProgramNames } from "@/lib/i18n/programs";
 import { getDictionary, getLocale } from "@/i18n";
+import { listTeamInbox } from "@/lib/messages";
 
 export default async function AdminPage() {
   const user = await getCurrentUser();
@@ -29,6 +31,9 @@ export default async function AdminPage() {
     orderBy: [{ submittedAt: "desc" }, { updatedAt: "desc" }],
     include: { user: true, lawyer: true },
   });
+
+  // Messages applicants have sent to the staff team (admin landing only).
+  const teamMessages = isLawyer ? [] : await listTeamInbox(50);
 
   // Group counts
   const counts: Record<string, number> = {};
@@ -109,6 +114,22 @@ export default async function AdminPage() {
             </table>
           )}
         </div>
+
+        {!isLawyer && (
+          <section className="mt-10">
+            <h2 className="text-lg font-bold text-ink-900">Messages from users</h2>
+            <p className="mt-1 text-sm text-ink-500">
+              Messages applicants have sent to the team. Open an applicant to reply.
+            </p>
+            <div className="card mt-4 p-6">
+              <MessageList
+                messages={teamMessages}
+                viewerIsStaff
+                emptyText="No messages from users yet."
+              />
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );

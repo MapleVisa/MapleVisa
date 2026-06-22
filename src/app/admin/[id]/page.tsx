@@ -7,11 +7,15 @@ import Timeline from "@/components/Timeline";
 import CaseActions from "@/components/CaseActions";
 import CaseAssistant from "@/components/ai/CaseAssistant";
 import DocumentsPanel from "@/components/DocumentsPanel";
+import AcceptAndAssign from "@/components/AcceptAndAssign";
+import MessageComposer from "@/components/MessageComposer";
+import MessageList from "@/components/MessageList";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { localizeProgram } from "@/lib/i18n/programs";
 import { getLocale } from "@/i18n";
 import { validateApplication } from "@/lib/applications";
+import { listMessagesForApplication } from "@/lib/messages";
 
 export default async function AdminCasePage({ params }: { params: { id: string } }) {
   const user = await getCurrentUser();
@@ -20,7 +24,12 @@ export default async function AdminCasePage({ params }: { params: { id: string }
 
   const app = await prisma.application.findUnique({
     where: { id: params.id },
-    include: { events: { orderBy: { createdAt: "desc" } }, user: true, lawyer: true },
+    include: {
+      events: { orderBy: { createdAt: "desc" } },
+      user: true,
+      lawyer: true,
+      documents: { select: { aiStatus: true, aiVerdict: true } },
+    },
   });
   if (!app) redirect("/admin");
 
@@ -29,6 +38,23 @@ export default async function AdminCasePage({ params }: { params: { id: string }
   const data = JSON.parse(app.data || "{}");
   const issues = validateApplication(app.program, data);
   const maxMb = Number(process.env.MAX_UPLOAD_MB) || 10;
+
+  const isAdmin = user.role === "ADMIN";
+  const messages = await listMessagesForApplication(app.id);
+
+  // Application-level readiness: every required field complete and every uploaded
+  // document AI-checked without a rejection verdict.
+  const docsTotal = app.documents.length;
+  const docsDone = app.documents.filter((d) => d.aiStatus === "DONE").length;
+  const docsRejected = app.documents.filter((d) => d.aiVerdict === "reject").length;
+  const validationOk = issues.length === 0;
+  const readiness = {
+    validationOk,
+    docsTotal,
+    docsDone,
+    docsRejected,
+    ready: validationOk && docsTotal > 0 && docsDone === docsTotal && docsRejected === 0,
+  };
 
   return (
     <div className="min-h-screen">
@@ -62,10 +88,26 @@ export default async function AdminCasePage({ params }: { params: { id: string }
             {app.status !== "WITHDRAWN" && (
               <DocumentsPanel applicationId={app.id} canUpload isStaff maxMb={maxMb} />
             )}
+
+            <div className="card p-6">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-ink-400">
+                Messages with applicant
+              </h3>
+              <div className="mt-4">
+                <MessageList messages={messages} viewerIsStaff emptyText="No messages with this applicant yet." />
+              </div>
+            </div>
+            <MessageComposer
+              toUserId={app.userId}
+              applicationId={app.id}
+              title="Message the applicant"
+              placeholder="Inform the applicant about their case, request something, or share an update…"
+            />
           </div>
 
           {/* Right: actions + AI + validation + timeline */}
           <aside className="space-y-6 lg:sticky lg:top-20 lg:self-start">
+            {isAdmin && <AcceptAndAssign id={app.id} status={app.status} readiness={readiness} />}
             <CaseActions id={app.id} role={user.role as "ADMIN" | "LAWYER"} status={app.status} />
             <CaseAssistant applicationId={app.id} />
 
