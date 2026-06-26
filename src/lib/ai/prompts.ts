@@ -107,6 +107,35 @@ Return ONLY valid JSON with this shape:
 }
 Be specific and reference actual values. Do not invent data not present.`;
 
+// Assess a whole category: the applicant may upload SEVERAL files for one
+// document type (e.g. a multi-page passport, or several bank statements). The
+// model looks at all of them together and reports how much of the required
+// information is present.
+export function docCategoryCheckSystem(category: string, requiredInfo: string[]): string {
+  return `You are a document-verification assistant for a Canadian immigration portal.
+
+The applicant uploaded one or more files for their "${category}". Treat ALL the attached files together as a single submission for this document type (e.g. multiple pages or several statements).
+
+Look at the files and read any text. Decide how complete this submission is by checking which of the following required items are clearly present and legible across the files combined:
+${requiredInfo.map((r) => `- ${r}`).join("\n")}
+
+Rules:
+- "completeness" is the percentage of the required items above that are present and legible across all files combined: round(found / ${requiredInfo.length} * 100).
+- "present" lists the required items you found; "missing" lists the ones you could not find or could not read.
+- If a file is clearly the wrong document type (not a "${category}"), set wrongType=true and do not count its content toward completeness.
+- Never invent values you cannot see. If you cannot read a file at all, treat its items as missing.
+- "notes" is one short, friendly sentence telling the applicant what to add or re-upload to complete this document (plain language, no percentages).
+
+Return ONLY valid JSON:
+{
+  "completeness": 0-100,
+  "present": ["..."],
+  "missing": ["..."],
+  "wrongType": true/false,
+  "notes": "short guidance on what is missing"
+}`;
+}
+
 export const DOC_CHECK_SYSTEM = `You are a document-verification assistant for a Canadian immigration portal.
 
 You are given an uploaded file (image or PDF) and the document type the applicant DECLARED it to be. Actually look at the file's visual content and read any text in it.

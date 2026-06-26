@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { ALLOWED_MIME, MAX_UPLOAD_BYTES, saveFile, sniffMime } from "@/lib/storage";
+import { requiredDocsForProgram } from "@/lib/documents";
 
 async function canAccess(appId: string, userId: string, role: string) {
   const app = await prisma.application.findUnique({ where: { id: appId } });
@@ -35,7 +36,17 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       createdAt: true,
     },
   });
-  return NextResponse.json({ documents: docs });
+
+  // Required-document checklist + saved per-category AI completeness.
+  const requirements = requiredDocsForProgram(app.program);
+  let checks: Record<string, any> = {};
+  try {
+    checks = app.docChecks ? JSON.parse(app.docChecks) : {};
+  } catch {
+    checks = {};
+  }
+
+  return NextResponse.json({ documents: docs, requirements, checks });
 }
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {

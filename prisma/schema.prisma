@@ -39,6 +39,7 @@ model Application {
   data        String   @db.Text // JSON blob of all field values (set on create)
   currentStep Int      @default(0)
   reviewNote  String?  @db.Text
+  docChecks   String?  @db.Text // JSON map: category -> { completeness, present[], missing[], notes, status, at }
   lawyerId    String?
   lawyer      User?    @relation("LawyerCases", fields: [lawyerId], references: [id])
   createdAt   DateTime @default(now())

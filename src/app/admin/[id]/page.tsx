@@ -16,6 +16,7 @@ import { prisma } from "@/lib/db";
 import { localizeProgram } from "@/lib/i18n/programs";
 import { getLocale } from "@/i18n";
 import { validateApplication } from "@/lib/applications";
+import { requiredDocsForProgram } from "@/lib/documents";
 import { listMessagesForApplication } from "@/lib/messages";
 
 export default async function AdminCasePage({ params }: { params: { id: string } }) {
@@ -29,7 +30,6 @@ export default async function AdminCasePage({ params }: { params: { id: string }
       events: { orderBy: { createdAt: "desc" } },
       user: true,
       lawyer: true,
-      documents: { select: { aiStatus: true, aiVerdict: true } },
     },
   });
   if (!app) redirect("/admin");
@@ -43,18 +43,27 @@ export default async function AdminCasePage({ params }: { params: { id: string }
   const isAdmin = user.role === "ADMIN";
   const messages = await listMessagesForApplication(app.id);
 
-  // Application-level readiness: every required field complete and every uploaded
-  // document AI-checked without a rejection verdict.
-  const docsTotal = app.documents.length;
-  const docsDone = app.documents.filter((d) => d.aiStatus === "DONE").length;
-  const docsRejected = app.documents.filter((d) => d.aiVerdict === "reject").length;
+  // Application-level readiness: every required field complete and every required
+  // document category assessed by AI as complete (green ≥ 80%).
+  const reqDocs = requiredDocsForProgram(app.program);
+  let docChecks: Record<string, any> = {};
+  try {
+    docChecks = app.docChecks ? JSON.parse(app.docChecks) : {};
+  } catch {
+    docChecks = {};
+  }
+  const docsTotal = reqDocs.length;
+  const docsDone = reqDocs.filter((r) => docChecks[r.category]?.status === "green").length;
+  const docsRejected = reqDocs.filter(
+    (r) => !docChecks[r.category] || docChecks[r.category]?.status === "red"
+  ).length;
   const validationOk = issues.length === 0;
   const readiness = {
     validationOk,
     docsTotal,
     docsDone,
     docsRejected,
-    ready: validationOk && docsTotal > 0 && docsDone === docsTotal && docsRejected === 0,
+    ready: validationOk && docsTotal > 0 && docsDone === docsTotal,
   };
 
   return (

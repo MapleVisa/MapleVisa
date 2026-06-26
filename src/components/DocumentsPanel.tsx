@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useT, fmt } from "@/i18n/IntlProvider";
+import { useEffect, useState } from "react";
+import { useT } from "@/i18n/IntlProvider";
 import { DOCUMENT_CATEGORIES } from "@/lib/documents";
 import PrettySelect from "./PrettySelect";
 
@@ -11,242 +11,320 @@ type Doc = {
   originalName: string;
   mimeType: string;
   size: number;
-  aiStatus: string;
-  aiVerdict: string | null;
-  aiResult: string | null;
-  reviewStatus: string;
-  reviewNote: string | null;
   createdAt: string;
 };
 
-const VERDICT_STYLE: Record<string, string> = {
-  ok: "bg-emerald-100 text-emerald-700",
-  attention: "bg-amber-100 text-amber-700",
-  reject: "bg-red-100 text-red-700",
+type Check = {
+  completeness: number;
+  present: string[];
+  missing: string[];
+  notes: string;
+  status: "green" | "yellow" | "red";
+  at: string;
 };
-const REVIEW_STYLE: Record<string, string> = {
-  PENDING: "bg-ink-100 text-ink-600",
-  ACCEPTED: "bg-emerald-100 text-emerald-700",
-  REJECTED: "bg-red-100 text-red-700",
-};
+
+type Requirement = { category: string; help: string; requiredInfo: string[] };
 
 export default function DocumentsPanel({
   applicationId,
   canUpload,
-  isStaff,
   maxMb,
 }: {
   applicationId: string;
   canUpload: boolean;
-  isStaff: boolean;
+  isStaff?: boolean;
   maxMb: number;
 }) {
   const t = useT();
   const [docs, setDocs] = useState<Doc[]>([]);
-  const [category, setCategory] = useState(DOCUMENT_CATEGORIES[0]);
-  const [uploading, setUploading] = useState(false);
+  const [requirements, setRequirements] = useState<Requirement[]>([]);
+  const [checks, setChecks] = useState<Record<string, Check>>({});
+  const [busy, setBusy] = useState<string | null>(null); // category currently uploading/checking
   const [error, setError] = useState("");
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [otherCategory, setOtherCategory] = useState("Other");
 
   async function load() {
     const res = await fetch(`/api/applications/${applicationId}/documents`);
-    if (res.ok) setDocs((await res.json()).documents);
+    if (res.ok) {
+      const j = await res.json();
+      setDocs(j.documents || []);
+      setRequirements(j.requirements || []);
+      setChecks(j.checks || {});
+    }
   }
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function onUpload(e: React.FormEvent) {
-    e.preventDefault();
-    const file = fileRef.current?.files?.[0];
-    if (!file) return;
-    setError("");
-    setUploading(true);
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("category", category);
-    const res = await fetch(`/api/applications/${applicationId}/documents`, {
+  const requiredCategories = new Set(requirements.map((r) => r.category));
+  const docsFor = (category: string) => docs.filter((d) => d.category === category);
+
+  async function runCheck(category: string) {
+    await fetch(`/api/applications/${applicationId}/doc-check`, {
       method: "POST",
-      body: fd,
-    });
-    setUploading(false);
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      setError(json.error || "Upload failed.");
-      return;
-    }
-    if (fileRef.current) fileRef.current.value = "";
-    await load();
-    // Auto-run AI check (ignore failures / not-configured).
-    if (json.id) {
-      fetch(`/api/documents/${json.id}/ai-check`, { method: "POST" }).then(() => load());
-      // optimistic refresh shortly after
-      setTimeout(load, 1500);
-    }
-  }
-
-  async function runAiCheck(id: string) {
-    setDocs((d) => d.map((x) => (x.id === id ? { ...x, aiStatus: "CHECKING" } : x)));
-    await fetch(`/api/documents/${id}/ai-check`, { method: "POST" });
-    load();
-  }
-
-  async function review(id: string, reviewStatus: string) {
-    await fetch(`/api/documents/${id}`, {
-      method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reviewStatus }),
-    });
-    load();
+      body: JSON.stringify({ category }),
+    }).catch(() => {});
+    await load();
   }
 
-  async function remove(id: string) {
-    await fetch(`/api/documents/${id}`, { method: "DELETE" });
-    load();
+  async function uploadTo(category: string, fileList: FileList | null) {
+    if (!fileList || fileList.length === 0) return;
+    setError("");
+    setBusy(category);
+    for (const file of Array.from(fileList)) {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("category", category);
+      const res = await fetch(`/api/applications/${applicationId}/documents`, { method: "POST", body: fd });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setError(j.error || "Upload failed.");
+      }
+    }
+    await load();
+    if (requiredCategories.has(category)) await runCheck(category);
+    setBusy(null);
   }
+
+  async function removeDoc(id: string, category: string) {
+    setBusy(category);
+    await fetch(`/api/documents/${id}`, { method: "DELETE" });
+    await load();
+    if (requiredCategories.has(category)) await runCheck(category);
+    setBusy(null);
+  }
+
+  const otherDocs = docs.filter((d) => !requiredCategories.has(d.category));
 
   return (
     <div className="card p-6">
       <h3 className="text-base font-bold text-ink-900">{t.docs.title}</h3>
-      <p className="mt-1 text-sm text-ink-500">{t.docs.subtitle}</p>
+      <p className="mt-1 text-sm text-ink-500">
+        Upload the required documents below. You can add several files for each one — our AI checks
+        them together and tells you what’s still missing.
+      </p>
 
-      {canUpload && (
-        <form onSubmit={onUpload} className="mt-4 rounded-xl border border-ink-200 bg-ink-50/50 p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+      {error && <p className="mt-3 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">{error}</p>}
+
+      {/* Required documents checklist */}
+      <div className="mt-5 space-y-4">
+        {requirements.map((req) => {
+          const list = docsFor(req.category);
+          const check = checks[req.category];
+          const checking = busy === req.category;
+          return (
+            <RequirementCard
+              key={req.category}
+              req={req}
+              docs={list}
+              check={check}
+              checking={checking}
+              canUpload={canUpload}
+              maxMb={maxMb}
+              onUpload={(files) => uploadTo(req.category, files)}
+              onRemove={(id) => removeDoc(id, req.category)}
+              onRecheck={() => runCheck(req.category)}
+            />
+          );
+        })}
+      </div>
+
+      {/* Other / optional documents */}
+      <div className="mt-8">
+        <h4 className="text-sm font-semibold text-ink-700">Other documents (optional)</h4>
+        <p className="mt-0.5 text-xs text-ink-400">
+          Anything else you’d like to provide (police certificate, photo, reference letters, etc.).
+        </p>
+
+        {canUpload && (
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex-1">
-              <label className="label">{t.docs.category}</label>
+              <label className="label">Document type</label>
               <PrettySelect
-                value={category}
-                onChange={setCategory}
-                options={DOCUMENT_CATEGORIES as unknown as string[]}
+                value={otherCategory}
+                onChange={setOtherCategory}
+                options={DOCUMENT_CATEGORIES.filter((c) => !requiredCategories.has(c))}
               />
             </div>
-            <div className="flex-1">
-              <label className="label">{t.docs.file}</label>
+            <label className="btn-secondary cursor-pointer">
+              {busy === otherCategory ? "Uploading…" : "Add files"}
               <input
-                ref={fileRef}
                 type="file"
                 accept=".pdf,.jpg,.jpeg,.png"
-                required
-                className="block w-full rounded-lg border border-ink-200 bg-white text-sm text-ink-600 file:mr-3 file:h-[42px] file:border-0 file:bg-brand-600 file:px-3 file:text-sm file:font-semibold file:text-white hover:file:bg-brand-700"
+                multiple
+                hidden
+                onChange={(e) => uploadTo(otherCategory, e.target.files)}
               />
-            </div>
-            <button type="submit" disabled={uploading} className="btn-primary sm:w-auto">
-              {uploading ? t.docs.uploading : t.docs.upload}
-            </button>
+            </label>
           </div>
-          <p className="mt-2 text-xs text-ink-400">{fmt(t.docs.maxSize, { mb: maxMb })}</p>
-        </form>
-      )}
-
-      {error && <p className="mt-3 text-sm text-brand-600">{error}</p>}
-
-      <div className="mt-4 space-y-3">
-        {docs.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-ink-300 bg-ink-50 px-4 py-6 text-center text-sm text-ink-400">
-            {t.docs.noDocs}
-          </p>
-        ) : (
-          docs.map((d) => {
-            const result = d.aiResult ? safeParse(d.aiResult) : null;
-            return (
-              <div key={d.id} className="rounded-xl border border-ink-200 p-4">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{d.mimeType === "application/pdf" ? "📄" : "🖼️"}</span>
-                      <span className="truncate font-semibold text-ink-900">{d.originalName}</span>
-                    </div>
-                    <p className="mt-0.5 text-xs text-ink-400">
-                      {d.category} · {(d.size / 1024).toFixed(0)} KB
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {d.aiStatus === "CHECKING" && (
-                      <span className="badge bg-blue-100 text-blue-700">{t.docs.aiChecking}</span>
-                    )}
-                    {d.aiStatus === "DONE" && d.aiVerdict && (
-                      <span className={`badge ${VERDICT_STYLE[d.aiVerdict] || "bg-ink-100 text-ink-600"}`}>
-                        {t.docs.aiReview}: {d.aiVerdict}
-                      </span>
-                    )}
-                    <span className={`badge ${REVIEW_STYLE[d.reviewStatus]}`}>
-                      {d.reviewStatus === "ACCEPTED"
-                        ? t.docs.accepted
-                        : d.reviewStatus === "REJECTED"
-                        ? t.docs.rejected
-                        : t.docs.pending}
-                    </span>
-                  </div>
-                </div>
-
-                {/* AI findings */}
-                {result?.issues?.length > 0 && (
-                  <ul className="mt-2 list-inside list-disc text-xs text-amber-700">
-                    {result.issues.slice(0, 5).map((iss: string, i: number) => (
-                      <li key={i}>{iss}</li>
-                    ))}
-                  </ul>
-                )}
-                {result && (result.expiryDate || result.fullName || result.documentNumber) && (
-                  <p className="mt-1 text-xs text-ink-500">
-                    {result.fullName ? `${result.fullName} · ` : ""}
-                    {result.documentNumber ? `#${result.documentNumber} · ` : ""}
-                    {result.expiryDate ? `exp ${result.expiryDate}` : ""}
-                    {result.isExpired ? " ⚠️" : ""}
-                  </p>
-                )}
-
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <a
-                    href={`/api/documents/${d.id}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn-secondary px-3 py-1.5 text-xs"
-                  >
-                    {t.docs.download}
-                  </a>
-                  {d.aiStatus !== "CHECKING" && (
-                    <button onClick={() => runAiCheck(d.id)} className="btn-ghost border border-transparent px-3 py-1.5 text-xs">
-                      {t.docs.runAiCheck}
-                    </button>
-                  )}
-                  {isStaff && (
-                    <>
-                      <button
-                        onClick={() => review(d.id, "ACCEPTED")}
-                        className="btn-ghost border border-transparent px-3 py-1.5 text-xs text-emerald-700"
-                      >
-                        ✓ {t.docs.markAccepted}
-                      </button>
-                      <button
-                        onClick={() => review(d.id, "REJECTED")}
-                        className="btn-ghost border border-transparent px-3 py-1.5 text-xs text-red-600"
-                      >
-                        ✕ {t.docs.markRejected}
-                      </button>
-                    </>
-                  )}
-                  {canUpload && (
-                    <button onClick={() => remove(d.id)} className="btn-ghost border border-transparent px-3 py-1.5 text-xs text-ink-400">
-                      {t.docs.delete}
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })
         )}
+
+        <div className="mt-3 space-y-2">
+          {otherDocs.length === 0 ? (
+            <p className="text-xs text-ink-400">No other documents uploaded.</p>
+          ) : (
+            otherDocs.map((d) => (
+              <FileRow key={d.id} doc={d} canRemove={canUpload} onRemove={() => removeDoc(d.id, d.category)} />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-function safeParse(s: string) {
-  try {
-    return JSON.parse(s);
-  } catch {
-    return null;
+function StatusBadge({ status, checking }: { status?: Check["status"]; checking: boolean }) {
+  if (checking) {
+    return (
+      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-blue-700" title="Checking…">
+        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-blue-300 border-t-blue-700" />
+      </span>
+    );
   }
+  const map = {
+    green: { cls: "bg-emerald-100 text-emerald-700", sym: "✓", title: "Complete" },
+    yellow: { cls: "bg-amber-100 text-amber-700", sym: "!", title: "Almost there — you can still submit" },
+    red: { cls: "bg-red-100 text-red-700", sym: "✕", title: "Required — please complete this" },
+  } as const;
+  const s = map[status ?? "red"];
+  return (
+    <span className={`flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold ${s.cls}`} title={s.title}>
+      {s.sym}
+    </span>
+  );
+}
+
+function RequirementCard({
+  req,
+  docs,
+  check,
+  checking,
+  canUpload,
+  maxMb,
+  onUpload,
+  onRemove,
+  onRecheck,
+}: {
+  req: Requirement;
+  docs: Doc[];
+  check?: Check;
+  checking: boolean;
+  canUpload: boolean;
+  maxMb: number;
+  onUpload: (files: FileList | null) => void;
+  onRemove: (id: string) => void;
+  onRecheck: () => void;
+}) {
+  const status = check?.status;
+  const border =
+    status === "green"
+      ? "border-emerald-200"
+      : status === "yellow"
+      ? "border-amber-200"
+      : "border-ink-200";
+
+  return (
+    <div className={`rounded-xl border ${border} p-4`}>
+      <div className="flex items-start gap-3">
+        <StatusBadge status={status} checking={checking} />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-ink-900">{req.category}</span>
+            <span className="text-brand-600">*</span>
+          </div>
+          <p className="mt-0.5 text-xs text-ink-500">{req.help}</p>
+
+          {/* Status guidance */}
+          {!checking && (
+            <div className="mt-2 text-xs">
+              {status === "green" && (
+                <p className="text-emerald-700">✓ All required details were found.</p>
+              )}
+              {status === "yellow" && (
+                <p className="text-amber-700">
+                  Almost complete — you can submit, but consider adding:{" "}
+                  {(check?.missing || []).join(", ") || "more detail"}.
+                </p>
+              )}
+              {status === "red" && docs.length > 0 && (
+                <p className="text-red-600">
+                  Not enough detail yet — please add a clearer file or the missing parts:{" "}
+                  {(check?.missing || []).join(", ") || "required details"}. You can’t submit until
+                  this is improved.
+                </p>
+              )}
+              {(!check || docs.length === 0) && (
+                <p className="text-ink-500">
+                  Please upload this document. Make sure it shows: {req.requiredInfo.join(", ")}.
+                </p>
+              )}
+              {check?.notes && status !== "green" && (
+                <p className="mt-1 text-ink-400">{check.notes}</p>
+              )}
+            </div>
+          )}
+
+          {/* Uploaded files */}
+          {docs.length > 0 && (
+            <div className="mt-3 space-y-1.5">
+              {docs.map((d) => (
+                <FileRow key={d.id} doc={d} canRemove={canUpload} onRemove={() => onRemove(d.id)} />
+              ))}
+            </div>
+          )}
+
+          {/* Actions */}
+          {canUpload && (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <label className="btn-secondary cursor-pointer px-3 py-1.5 text-xs">
+                {checking ? "Working…" : docs.length ? "Add more files" : "Upload file(s)"}
+                <input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  multiple
+                  hidden
+                  disabled={checking}
+                  onChange={(e) => onUpload(e.target.files)}
+                />
+              </label>
+              {docs.length > 0 && (
+                <button
+                  onClick={onRecheck}
+                  disabled={checking}
+                  className="btn-ghost border border-transparent px-3 py-1.5 text-xs"
+                >
+                  Re-check
+                </button>
+              )}
+              <span className="text-xs text-ink-400">PDF, JPG or PNG · up to {maxMb} MB each</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FileRow({ doc, canRemove, onRemove }: { doc: Doc; canRemove: boolean; onRemove: () => void }) {
+  return (
+    <div className="flex items-center justify-between gap-2 rounded-lg border border-ink-100 bg-ink-50/50 px-3 py-2">
+      <div className="flex min-w-0 items-center gap-2">
+        <span>{doc.mimeType === "application/pdf" ? "📄" : "🖼️"}</span>
+        <span className="truncate text-sm text-ink-700">{doc.originalName}</span>
+        <span className="shrink-0 text-xs text-ink-400">{(doc.size / 1024).toFixed(0)} KB</span>
+      </div>
+      <div className="flex shrink-0 items-center gap-1">
+        <a href={`/api/documents/${doc.id}`} target="_blank" rel="noreferrer" className="btn-ghost px-2 py-1 text-xs">
+          View
+        </a>
+        {canRemove && (
+          <button onClick={onRemove} className="btn-ghost px-2 py-1 text-xs text-ink-400">
+            Remove
+          </button>
+        )}
+      </div>
+    </div>
+  );
 }
