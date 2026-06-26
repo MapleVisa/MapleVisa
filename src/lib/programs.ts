@@ -161,19 +161,23 @@ const childrenRepeater: Field = {
   ],
 };
 
+const yesNo = ["Yes", "No"];
+
 const backgroundSection: Section = {
   id: "background",
   title: "Background declarations",
-  description: "Answer honestly — these questions affect admissibility. Provide details where applicable.",
+  description: "Answer honestly — these questions affect admissibility. If you answer Yes, please provide details.",
   fields: [
-    { name: "hasCriminal", label: "Have you ever been convicted of a crime?", type: "checkbox" },
-    { name: "criminalDetails", label: "Criminal conviction details", type: "textarea", showIf: { field: "hasCriminal", in: ["true"] } },
-    { name: "hasCharges", label: "Do you have any pending charges?", type: "checkbox" },
-    { name: "hasMilitary", label: "Have you performed military service?", type: "checkbox" },
-    { name: "militaryDetails", label: "Military service details", type: "textarea", showIf: { field: "hasMilitary", in: ["true"] } },
-    { name: "heldGovPosition", label: "Have you held a government or security-organization position?", type: "checkbox" },
-    { name: "orgMembership", label: "Are/were you a member of any organization (political, social, etc.)?", type: "checkbox" },
-    { name: "orgDetails", label: "Organization details", type: "textarea", showIf: { field: "orgMembership", in: ["true"] } },
+    { name: "hasCriminal", label: "Have you ever been convicted of a crime?", type: "radio", options: yesNo, required: true },
+    { name: "criminalDetails", label: "Please provide details", type: "textarea", required: true, showIf: { field: "hasCriminal", in: ["Yes"] } },
+    { name: "hasCharges", label: "Do you have any pending charges?", type: "radio", options: yesNo, required: true },
+    { name: "chargesDetails", label: "Please provide details", type: "textarea", required: true, showIf: { field: "hasCharges", in: ["Yes"] } },
+    { name: "hasMilitary", label: "Have you performed military service?", type: "radio", options: yesNo, required: true },
+    { name: "militaryDetails", label: "Please provide details", type: "textarea", required: true, showIf: { field: "hasMilitary", in: ["Yes"] } },
+    { name: "heldGovPosition", label: "Have you held a government or security-organization position?", type: "radio", options: yesNo, required: true },
+    { name: "govPositionDetails", label: "Please provide details", type: "textarea", required: true, showIf: { field: "heldGovPosition", in: ["Yes"] } },
+    { name: "orgMembership", label: "Are/were you a member of any organization (political, social, etc.)?", type: "radio", options: yesNo, required: true },
+    { name: "orgDetails", label: "Please provide details", type: "textarea", required: true, showIf: { field: "orgMembership", in: ["Yes"] } },
   ],
 };
 

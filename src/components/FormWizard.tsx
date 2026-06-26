@@ -4,7 +4,7 @@ import { useCallbackRef } from "./useCallbackRef";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Section } from "@/lib/programs";
-import FormField from "./FormField";
+import FormField, { isFieldVisible } from "./FormField";
 import { useT, fmt } from "@/i18n/IntlProvider";
 import CopilotDrawer from "./ai/CopilotDrawer";
 
@@ -232,11 +232,13 @@ export default function FormWizard({
           )}
 
           <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
-            {current.fields.map((field) => (
-              <div key={field.name} className={field.half ? "" : "sm:col-span-2"}>
-                <FormField field={field} scope={data} onChange={setField} />
-              </div>
-            ))}
+            {current.fields
+              .filter((field) => isFieldVisible(field, data))
+              .map((field) => (
+                <div key={field.name} className={field.half ? "" : "sm:col-span-2"}>
+                  <FormField field={field} scope={data} onChange={setField} />
+                </div>
+              ))}
           </div>
         </div>
 

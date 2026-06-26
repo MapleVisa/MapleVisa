@@ -12,7 +12,7 @@ function optionLabel(field: Field, value: string) {
   return (i >= 0 && field.optionLabels?.[i]) || value;
 }
 
-function visible(field: Field, scope: Scope) {
+export function isFieldVisible(field: Field, scope: Record<string, any>) {
   if (!field.showIf) return true;
   const dep = String(scope[field.showIf.field] ?? "");
   return field.showIf.in.includes(dep);
@@ -28,7 +28,7 @@ export default function FormField({
   onChange: (name: string, value: any) => void;
 }) {
   const t = useT();
-  if (!visible(field, scope)) return null;
+  if (!isFieldVisible(field, scope)) return null;
 
   if (field.type === "repeater") {
     return <Repeater field={field} value={scope[field.name] || []} onChange={(v) => onChange(field.name, v)} />;
@@ -173,15 +173,17 @@ function Repeater({
               </button>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {field.fields?.map((sub) => (
-                <div key={sub.name} className={sub.half ? "" : "sm:col-span-2"}>
-                  <FormField
-                    field={sub}
-                    scope={item}
-                    onChange={(name, val) => updateItem(i, name, val)}
-                  />
-                </div>
-              ))}
+              {field.fields
+                ?.filter((sub) => isFieldVisible(sub, item))
+                .map((sub) => (
+                  <div key={sub.name} className={sub.half ? "" : "sm:col-span-2"}>
+                    <FormField
+                      field={sub}
+                      scope={item}
+                      onChange={(name, val) => updateItem(i, name, val)}
+                    />
+                  </div>
+                ))}
             </div>
           </div>
         ))}
