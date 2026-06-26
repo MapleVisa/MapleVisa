@@ -69,15 +69,8 @@ export default async function DashboardPage() {
               return (
                 <div
                   key={app.id}
-                  className="card relative flex flex-col gap-4 p-5 transition hover:shadow-card sm:flex-row sm:items-center sm:justify-between"
+                  className="card flex flex-col gap-4 p-5 transition hover:shadow-card sm:flex-row sm:items-center sm:justify-between"
                 >
-                  {/* Stretched link makes the whole card clickable; interactive
-                      controls below sit above it via z-10. */}
-                  <Link
-                    href={`/apply/${app.id}`}
-                    aria-label={programName}
-                    className="absolute inset-0"
-                  />
                   <div className="flex items-start gap-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-2xl">
                       {prog?.icon ?? "📄"}
@@ -103,9 +96,12 @@ export default async function DashboardPage() {
                         })}
                       </span>
                     )}
-                    <span className="relative z-10 inline-flex items-center justify-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-700">
-                      {editable ? t.dashboard.continue : t.dashboard.view}
-                    </span>
+                    <Link
+                      href={`/apply/${app.id}`}
+                      className="inline-flex items-center justify-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-700"
+                    >
+                      {(editable ? t.dashboard.continue : t.dashboard.view).replace(/\s*→\s*$/, "")}
+                    </Link>
                     {app.status === "DRAFT" ? (
                       <WithdrawButton applicationId={app.id} mode="delete" />
                     ) : (
