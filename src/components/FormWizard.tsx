@@ -92,6 +92,7 @@ export default function FormWizard({
           const dep = String(data[f.showIf.field] ?? "");
           if (!f.showIf.in.includes(dep)) return true;
         }
+        if (f.type === "checkbox") return data[f.name] === true || data[f.name] === "true";
         return notEmpty(data[f.name]);
       });
       return allFilled ? "done" : "partial";

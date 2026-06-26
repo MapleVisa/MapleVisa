@@ -44,7 +44,12 @@ function missingInSection(section: Section, data: Record<string, any>): string[]
       const dep = String(data[field.showIf.field] ?? "");
       if (!field.showIf.in.includes(dep)) continue;
     }
-    if (field.required && isEmpty(data[field.name])) {
+    if (!field.required) continue;
+    if (field.type === "checkbox") {
+      // A required checkbox must actually be ticked (true), not just present.
+      const v = data[field.name];
+      if (v !== true && v !== "true") missing.push(field.label);
+    } else if (isEmpty(data[field.name])) {
       missing.push(field.label);
     }
   }

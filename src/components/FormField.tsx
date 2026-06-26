@@ -46,7 +46,10 @@ export default function FormField({
           onChange={(e) => onChange(field.name, e.target.checked)}
           className="mt-0.5 h-4 w-4 rounded border-ink-300 text-brand-600 focus:ring-brand-500"
         />
-        <span className="text-sm text-ink-700">{field.label}</span>
+        <span className="text-sm text-ink-700">
+          {field.label}
+          {field.required && <span className="text-brand-600"> *</span>}
+        </span>
       </label>
     );
   }
