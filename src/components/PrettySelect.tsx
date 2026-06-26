@@ -2,9 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 
+export type PrettyOption = string | { value: string; label: string };
+
 /**
  * A styled dropdown (rounded corners, soft shadow) to replace the native
  * <select>, whose option list is drawn by the OS and can't be styled.
+ * Accepts plain strings, or { value, label } pairs when the displayed label
+ * differs from the stored value (e.g. translated form options).
  */
 export default function PrettySelect({
   value,
@@ -14,11 +18,14 @@ export default function PrettySelect({
 }: {
   value: string;
   onChange: (v: string) => void;
-  options: string[];
+  options: PrettyOption[];
   placeholder?: string;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
+  const norm = options.map((o) => (typeof o === "string" ? { value: o, label: o } : o));
+  const selected = norm.find((o) => o.value === value);
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
@@ -37,7 +44,9 @@ export default function PrettySelect({
         aria-haspopup="listbox"
         aria-expanded={open}
       >
-        <span className={value ? "text-ink-900" : "text-ink-400"}>{value || placeholder}</span>
+        <span className={selected ? "text-ink-900" : "text-ink-400"}>
+          {selected?.label || placeholder}
+        </span>
         <svg viewBox="0 0 20 20" className={`h-4 w-4 shrink-0 text-ink-400 transition ${open ? "rotate-180" : ""}`} fill="none">
           <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -47,25 +56,25 @@ export default function PrettySelect({
           role="listbox"
           className="absolute z-50 mt-1.5 max-h-72 w-full overflow-auto rounded-xl border border-ink-200 bg-white p-1.5 shadow-card"
         >
-          {options.map((opt) => (
-            <li key={opt}>
+          {norm.map((opt) => (
+            <li key={opt.value}>
               <button
                 type="button"
                 role="option"
-                aria-selected={opt === value}
+                aria-selected={opt.value === value}
                 onClick={() => {
-                  onChange(opt);
+                  onChange(opt.value);
                   setOpen(false);
                 }}
                 className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-start text-sm transition ${
-                  opt === value
+                  opt.value === value
                     ? "bg-brand-50 font-semibold text-brand-700"
                     : "text-ink-700 hover:bg-ink-50"
                 }`}
               >
-                {opt}
-                {opt === value && (
-                  <svg viewBox="0 0 20 20" className="h-4 w-4 text-brand-600" fill="none">
+                {opt.label}
+                {opt.value === value && (
+                  <svg viewBox="0 0 20 20" className="h-4 w-4 shrink-0 text-brand-600" fill="none">
                     <path d="M5 10l3.5 3.5L15 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 )}

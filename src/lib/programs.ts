@@ -257,26 +257,6 @@ const fundsSection: Section = {
   ],
 };
 
-const documentsSection: Section = {
-  id: "documents",
-  title: "Supporting documents",
-  description:
-    "Confirm which documents you can provide. After validation, our team will request secure uploads for each.",
-  fields: [
-    { name: "docPassport", label: "Passport", type: "checkbox", required: true },
-    { name: "docPhoto", label: "Digital photo", type: "checkbox" },
-    { name: "docEca", label: "ECA report", type: "checkbox", required: true },
-    { name: "docLanguage", label: "Language test results", type: "checkbox", required: true },
-    { name: "docReference", label: "Employment reference letters", type: "checkbox" },
-    { name: "docPolice", label: "Police certificates", type: "checkbox" },
-    { name: "docMedical", label: "Medical exam confirmation", type: "checkbox" },
-    { name: "docFunds", label: "Proof of funds", type: "checkbox", required: true },
-    { name: "docMarriage", label: "Marriage certificate (if applicable)", type: "checkbox" },
-    { name: "docBirth", label: "Children's birth certificates (if applicable)", type: "checkbox" },
-    { name: "docNotes", label: "Notes about your documents", type: "textarea" },
-  ],
-};
-
 // ---- Programs ---------------------------------------------------------------
 
 const expressEntry: Program = {
@@ -301,7 +281,7 @@ const expressEntry: Program = {
         { name: "hasCanadianExperience", label: "I have Canadian work experience", type: "checkbox", half: true },
       ],
     },
-    { id: "education", title: "Education history", description: "Each credential, with ECA where available.", fields: [educationRepeater] },
+    { id: "education", title: "Education history", description: "Each credential, with ECA where available.", fields: [{ ...educationRepeater, required: true }] },
     languageSection,
     { id: "work", title: "Work history", description: "Your employment over the last 10 years.", fields: [workHistoryRepeater] },
     {
@@ -362,7 +342,6 @@ const expressEntry: Program = {
     fundsSection,
     immigrationHistorySection,
     backgroundSection,
-    documentsSection,
   ],
 };
 
@@ -461,7 +440,6 @@ const pnp: Program = {
         { name: "supportNetwork", label: "Family / support network", type: "text" },
       ],
     },
-    documentsSection,
   ],
 };
 
@@ -591,21 +569,6 @@ const sponsor: Program = {
     },
     immigrationHistorySection,
     backgroundSection,
-    {
-      id: "documents",
-      title: "Supporting documents",
-      fields: [
-        { name: "docPassports", label: "Passports", type: "checkbox", required: true },
-        { name: "docBirth", label: "Birth certificates", type: "checkbox" },
-        { name: "docMarriage", label: "Marriage certificate (if applicable)", type: "checkbox" },
-        { name: "docDivorce", label: "Divorce certificates (if applicable)", type: "checkbox" },
-        { name: "docPolice", label: "Police certificates", type: "checkbox" },
-        { name: "docPhotos", label: "Digital photos", type: "checkbox" },
-        { name: "docRelationship", label: "Proof of relationship", type: "checkbox", required: true },
-        { name: "docMedical", label: "Medical examination results", type: "checkbox" },
-        { name: "docNotes", label: "Notes about your documents", type: "textarea" },
-      ],
-    },
   ],
 };
 
@@ -728,22 +691,6 @@ const business: Program = {
     },
     immigrationHistorySection,
     backgroundSection,
-    {
-      id: "documents",
-      title: "Supporting documents",
-      fields: [
-        { name: "docPassport", label: "Passports", type: "checkbox", required: true },
-        { name: "docBizReg", label: "Business registration documents", type: "checkbox" },
-        { name: "docCorpTax", label: "Corporate tax returns", type: "checkbox" },
-        { name: "docPersonalTax", label: "Personal tax returns", type: "checkbox" },
-        { name: "docFinancials", label: "Audited financial statements", type: "checkbox" },
-        { name: "docBank", label: "Bank statements (proof of funds)", type: "checkbox", required: true },
-        { name: "docProperty", label: "Property ownership records", type: "checkbox" },
-        { name: "docNetWorth", label: "Net worth verification report", type: "checkbox" },
-        { name: "docPolice", label: "Police certificates", type: "checkbox" },
-        { name: "docNotes", label: "Notes about your documents", type: "textarea" },
-      ],
-    },
   ],
 };
 

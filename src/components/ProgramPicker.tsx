@@ -14,12 +14,20 @@ type ProgramCard = {
   sections: number;
 };
 
-export default function ProgramPicker({ programs }: { programs: ProgramCard[] }) {
+export default function ProgramPicker({
+  programs,
+  draftPrograms = [],
+}: {
+  programs: ProgramCard[];
+  draftPrograms?: string[];
+}) {
   const router = useRouter();
   const t = useT();
   const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const hasDuplicateDraft = !!selected && draftPrograms.includes(selected);
 
   async function start() {
     if (!selected) return;
@@ -78,6 +86,14 @@ export default function ProgramPicker({ programs }: { programs: ProgramCard[] })
         })}
       </div>
 
+      {hasDuplicateDraft && (
+        <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <span className="font-semibold">⚠️ You already have a draft for this program.</span>{" "}
+          You can still start another, but you may want to continue your existing draft from your
+          dashboard instead of creating a duplicate.
+        </div>
+      )}
+
       {error && <p className="mt-4 text-center text-sm text-brand-600">{error}</p>}
 
       <div className="mt-8 flex justify-center">
@@ -86,7 +102,11 @@ export default function ProgramPicker({ programs }: { programs: ProgramCard[] })
           disabled={!selected || loading}
           className="btn-primary px-8 py-3 text-base"
         >
-          {loading ? t.common.loading : t.common.continue}
+          {loading
+            ? t.common.loading
+            : hasDuplicateDraft
+            ? "Start another anyway"
+            : t.common.continue}
         </button>
       </div>
     </div>

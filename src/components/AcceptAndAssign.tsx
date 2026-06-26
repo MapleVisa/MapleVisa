@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import PrettySelect from "./PrettySelect";
 
 type Lawyer = { id: string; fullName: string; email: string; activeCases: number };
 
@@ -134,13 +135,15 @@ export default function AcceptAndAssign({
             ) : lawyers.length === 0 ? (
               <p className="text-sm text-amber-700">No lawyers available. Add a lawyer account first.</p>
             ) : (
-              <select className="input" value={lawyerId} onChange={(e) => setLawyerId(e.target.value)}>
-                {lawyers.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.fullName} — {l.activeCases} active case{l.activeCases === 1 ? "" : "s"}
-                  </option>
-                ))}
-              </select>
+              <PrettySelect
+                value={lawyerId}
+                onChange={setLawyerId}
+                placeholder="Select a lawyer…"
+                options={lawyers.map((l) => ({
+                  value: l.id,
+                  label: `${l.fullName} — ${l.activeCases} active case${l.activeCases === 1 ? "" : "s"}`,
+                }))}
+              />
             )}
           </div>
           <button

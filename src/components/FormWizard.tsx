@@ -201,9 +201,16 @@ export default function FormWizard({
                 const idx = sections.findIndex((s) => s.id === iss.sectionId);
                 return (
                   <li key={iss.sectionId}>
-                    <button onClick={() => goTo(idx)} className="font-medium underline">
-                      {iss.sectionTitle}
-                    </button>
+                    {idx >= 0 ? (
+                      // A form section: clickable to jump straight to it.
+                      <button onClick={() => goTo(idx)} className="font-medium underline">
+                        {iss.sectionTitle}
+                      </button>
+                    ) : (
+                      // Non-form issue (e.g. required documents, handled in the
+                      // Documents panel below) — show as plain label.
+                      <span className="font-medium">{iss.sectionTitle}</span>
+                    )}
                     : {iss.missing.join(", ")}
                   </li>
                 );

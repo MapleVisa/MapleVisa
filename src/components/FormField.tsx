@@ -2,6 +2,7 @@
 
 import type { Field } from "@/lib/programs";
 import { useT, fmt } from "@/i18n/IntlProvider";
+import PrettySelect from "./PrettySelect";
 
 type Scope = Record<string, any>;
 
@@ -70,19 +71,15 @@ export default function FormField({
           onChange={(e) => onChange(field.name, e.target.value)}
         />
       ) : field.type === "select" ? (
-        <select
-          id={id}
-          className="input"
+        <PrettySelect
           value={value}
-          onChange={(e) => onChange(field.name, e.target.value)}
-        >
-          <option value="">{t.common.select}</option>
-          {field.options?.map((o, i) => (
-            <option key={o} value={o}>
-              {field.optionLabels?.[i] ?? o}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => onChange(field.name, v)}
+          placeholder={t.common.select}
+          options={(field.options ?? []).map((o, i) => ({
+            value: o,
+            label: field.optionLabels?.[i] ?? o,
+          }))}
+        />
       ) : field.type === "radio" ? (
         <div className="space-y-2">
           {field.options?.map((o, i) => (

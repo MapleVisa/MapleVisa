@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { getDictionary, getLocale } from "@/i18n";
 import { localizePrograms } from "@/lib/i18n/programs";
 import ProgramPicker from "@/components/ProgramPicker";
@@ -13,6 +14,13 @@ export default async function ApplyPage() {
   const locale = await getLocale();
   const t = await getDictionary(locale);
   const programs = await localizePrograms(locale);
+
+  // Programs the user already has an unsubmitted draft for (to warn about duplicates).
+  const drafts = await prisma.application.findMany({
+    where: { userId: user.id, status: "DRAFT" },
+    select: { program: true },
+  });
+  const draftPrograms = Array.from(new Set(drafts.map((d) => d.program)));
 
   return (
     <div className="min-h-screen">
@@ -27,6 +35,7 @@ export default async function ApplyPage() {
           </div>
         </div>
         <ProgramPicker
+          draftPrograms={draftPrograms}
           programs={programs.map((p) => ({
             code: p.code,
             name: p.name,
