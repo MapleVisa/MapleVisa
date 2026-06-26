@@ -17,6 +17,8 @@ model User {
   passwordHash String
   fullName     String
   phone        String?
+  address      String?
+  avatarKey    String? // storage key of the profile image (served via /api/avatar/[id])
   role         String        @default("APPLICANT")
   createdAt    DateTime      @default(now())
   applications Application[] @relation("OwnerApplications")

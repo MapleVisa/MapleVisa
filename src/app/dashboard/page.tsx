@@ -10,6 +10,7 @@ import { localizeProgramNames } from "@/lib/i18n/programs";
 import { STATUS_META, canWithdraw, type AppStatus } from "@/lib/status";
 import { getDictionary, getLocale } from "@/i18n";
 import { fmt } from "@/i18n/load";
+import WaveIcon from "@/components/WaveIcon";
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -35,8 +36,11 @@ export default async function DashboardPage() {
       <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-ink-900">
-              {t.dashboard.welcome}, {firstName} 👋
+            <h1 className="flex items-center gap-2 text-2xl font-bold text-ink-900">
+              <span>
+                {t.dashboard.welcome}, {firstName}
+              </span>
+              <WaveIcon className="h-8 w-8 shrink-0" />
             </h1>
             <p className="mt-1 text-ink-500">{t.dashboard.manageSub}</p>
           </div>
@@ -99,7 +103,7 @@ export default async function DashboardPage() {
                         })}
                       </span>
                     )}
-                    <span className="text-sm font-semibold text-brand-600">
+                    <span className="relative z-10 inline-flex items-center justify-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-700">
                       {editable ? t.dashboard.continue : t.dashboard.view}
                     </span>
                     {app.status === "DRAFT" ? (

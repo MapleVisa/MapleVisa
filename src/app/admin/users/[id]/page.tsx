@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
+import BackButton from "@/components/BackButton";
 import StatusBadge from "@/components/StatusBadge";
 import MessageList from "@/components/MessageList";
 import MessageComposer from "@/components/MessageComposer";
@@ -41,6 +42,7 @@ export default async function AdminUserProfilePage({ params }: { params: { id: s
     <div className="min-h-screen">
       <AppHeader user={staff} />
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        <BackButton href="/admin/users" />
         <div className="mb-6 flex items-center gap-2 text-sm text-ink-400">
           <Link href="/admin/users" className="hover:text-ink-600">
             Users

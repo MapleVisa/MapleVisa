@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
+import BackButton from "@/components/BackButton";
 import StatusBadge from "@/components/StatusBadge";
 import ApplicationSummary from "@/components/ApplicationSummary";
 import Timeline from "@/components/Timeline";
@@ -60,6 +61,7 @@ export default async function AdminCasePage({ params }: { params: { id: string }
     <div className="min-h-screen">
       <AppHeader user={user} />
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        <BackButton href="/admin" />
         <div className="mb-6 flex items-center gap-2 text-sm text-ink-400">
           <Link href="/admin" className="hover:text-ink-600">
             Review queue

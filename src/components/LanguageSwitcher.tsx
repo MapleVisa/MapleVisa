@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { LOCALES, LOCALE_META, type Locale } from "@/i18n/config";
 import { useIntl } from "@/i18n/IntlProvider";
+import Flag from "./Flag";
 
 export default function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
@@ -41,7 +42,7 @@ export default function LanguageSwitcher({ compact = false }: { compact?: boolea
         className="btn-ghost gap-1.5 px-2.5"
         aria-label="Change language"
       >
-        <span className="text-base">{LOCALE_META[locale].flag}</span>
+        <Flag locale={locale} />
         {!compact && <span>{LOCALE_META[locale].label}</span>}
         <span className="text-xs text-ink-400">▾</span>
       </button>
@@ -55,7 +56,7 @@ export default function LanguageSwitcher({ compact = false }: { compact?: boolea
                 loc === locale ? "bg-brand-50 font-semibold text-brand-700" : "text-ink-700 hover:bg-ink-50"
               }`}
             >
-              <span className="text-base">{LOCALE_META[loc].flag}</span>
+              <Flag locale={loc} />
               <span>{LOCALE_META[loc].label}</span>
             </button>
           ))}

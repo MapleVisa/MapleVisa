@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useT, fmt } from "@/i18n/IntlProvider";
 import { DOCUMENT_CATEGORIES } from "@/lib/documents";
+import PrettySelect from "./PrettySelect";
 
 type Doc = {
   id: string;
@@ -115,13 +116,11 @@ export default function DocumentsPanel({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex-1">
               <label className="label">{t.docs.category}</label>
-              <select className="input" value={category} onChange={(e) => setCategory(e.target.value)}>
-                {DOCUMENT_CATEGORIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+              <PrettySelect
+                value={category}
+                onChange={setCategory}
+                options={DOCUMENT_CATEGORIES as unknown as string[]}
+              />
             </div>
             <div className="flex-1">
               <label className="label">{t.docs.file}</label>

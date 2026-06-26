@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
+import BackButton from "@/components/BackButton";
 import FormWizard from "@/components/FormWizard";
 import StatusBadge from "@/components/StatusBadge";
 import StatusTracker from "@/components/StatusTracker";
@@ -44,6 +45,7 @@ export default async function ApplicationPage({
     <div className="min-h-screen">
       <AppHeader user={user} />
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        <BackButton href="/dashboard" />
         <div className="mb-6 flex items-center gap-2 text-sm text-ink-400">
           <Link href="/dashboard" className="hover:text-ink-600">
             {t.wizard.breadcrumb}

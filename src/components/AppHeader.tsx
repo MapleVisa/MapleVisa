@@ -2,14 +2,20 @@ import Link from "next/link";
 import Logo from "./Logo";
 import LogoutButton from "./LogoutButton";
 import LanguageSwitcher from "./LanguageSwitcher";
+import Avatar from "./Avatar";
 import type { SessionUser } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { getDictionary } from "@/i18n";
 
 export default async function AppHeader({ user }: { user: SessionUser }) {
   const t = await getDictionary();
   const isStaff = user.role === "ADMIN" || user.role === "LAWYER";
-  const roleLabel =
-    user.role === "ADMIN" ? t.nav.admin : user.role === "LAWYER" ? t.nav.lawyer : t.nav.applicant;
+
+  // Profile image (if any) for the top-bar avatar.
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { avatarKey: true },
+  });
 
   return (
     <header className="sticky top-0 z-30 border-b border-ink-200/70 bg-white/80 backdrop-blur">
@@ -33,9 +39,6 @@ export default async function AppHeader({ user }: { user: SessionUser }) {
                 <Link href="/dashboard" className="btn-ghost">
                   {t.nav.myApplications}
                 </Link>
-                <Link href="/apply" className="btn-ghost">
-                  {t.nav.startNew}
-                </Link>
                 <Link href="/messages" className="btn-ghost">
                   Messages
                 </Link>
@@ -45,10 +48,26 @@ export default async function AppHeader({ user }: { user: SessionUser }) {
         </div>
         <div className="flex items-center gap-2">
           <LanguageSwitcher compact />
-          <div className="hidden text-end sm:block">
-            <div className="text-sm font-semibold text-ink-800">{user.fullName}</div>
-            <div className="text-xs capitalize text-ink-500">{roleLabel}</div>
-          </div>
+          {isStaff ? (
+            <div className="flex items-center gap-2">
+              <Avatar id={user.id} name={user.fullName} avatarKey={dbUser?.avatarKey} />
+              <div className="hidden text-end sm:block">
+                <div className="text-sm font-semibold text-ink-800">{user.fullName}</div>
+              </div>
+            </div>
+          ) : (
+            // Applicants: avatar + name link to their profile; role is not shown.
+            <Link
+              href="/profile"
+              className="flex items-center gap-2 rounded-full p-0.5 pe-2 transition hover:bg-ink-100"
+              title="Your profile"
+            >
+              <Avatar id={user.id} name={user.fullName} avatarKey={dbUser?.avatarKey} />
+              <span className="hidden text-sm font-semibold text-ink-800 sm:block">
+                {user.fullName}
+              </span>
+            </Link>
+          )}
           <LogoutButton />
         </div>
       </div>

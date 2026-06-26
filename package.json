@@ -17,6 +17,7 @@
     "@vercel/blob": "^2.4.0",
     "aws4fetch": "^1.0.20",
     "bcryptjs": "2.4.3",
+    "country-flag-icons": "^1.6.19",
     "jose": "5.9.6",
     "next": "14.2.35",
     "react": "18.3.1",
