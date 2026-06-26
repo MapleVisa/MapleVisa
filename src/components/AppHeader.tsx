@@ -19,7 +19,7 @@ export default async function AppHeader({ user }: { user: SessionUser }) {
 
   return (
     <header className="sticky top-0 z-30 border-b border-ink-200/70 bg-white/80 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+      <div className="mx-auto flex h-16 w-[90%] items-center justify-between">
         <div className="flex items-center gap-6">
           <Logo href={isStaff ? "/admin" : "/dashboard"} />
           <nav className="hidden items-center gap-1 sm:flex">

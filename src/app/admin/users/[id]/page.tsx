@@ -41,7 +41,7 @@ export default async function AdminUserProfilePage({ params }: { params: { id: s
   return (
     <div className="min-h-screen">
       <AppHeader user={staff} />
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+      <main className="mx-auto w-[90%] py-8">
         <BackButton href="/admin/users" />
         <div className="mb-6 flex items-center gap-2 text-sm text-ink-400">
           <Link href="/admin/users" className="hover:text-ink-600">

@@ -93,19 +93,36 @@ function flatFields(section: Section): Field[] {
   return section.fields.filter((f) => f.type !== "repeater");
 }
 
-export const CASE_SUMMARY_SYSTEM = `You are an assistant for immigration case officers and lawyers at the Maple Visa portal.
+// Staff-facing case briefing. Always written in the third person about the
+// applicant (NOT addressed to the applicant). For lawyers it also summarises the
+// uploaded documents and their completeness.
+export function caseSummarySystem(role: "ADMIN" | "LAWYER"): string {
+  const isLawyer = role === "LAWYER";
+  return `You are an assistant for immigration ${
+    isLawyer ? "lawyers" : "case officers (admins)"
+  } at the Maple Visa portal. You are briefing internal STAFF — NOT the applicant.
 
-Given an applicant's structured application data (JSON), produce a concise case briefing for staff. Respond in English (staff language).
+Write everything in the THIRD PERSON about the applicant (e.g. "The applicant has 6 years of experience…", "This case shows…"). NEVER address the applicant directly with "you". Respond in English (the staff language), regardless of the applicant's language.
+
+You are given the applicant's structured application data (JSON)${
+    isLawyer ? ", plus the list of uploaded documents and the AI completeness assessment for each required document" : ""
+  }. Produce a concise briefing for staff.
 
 Return ONLY valid JSON with this shape:
 {
-  "summary": "2-4 sentence overview of the applicant and their case",
-  "strengths": ["..."],
-  "concerns": ["..."],
-  "inconsistencies": ["specific data problems: expired passport, date gaps, funds below typical thresholds, missing key info, etc."],
-  "suggestedNote": "a short, polite message to send the applicant if information is missing (empty string if nothing needed)"
+  "summary": "2-4 sentence staff briefing of who the applicant is and where the case stands (third person)",
+  "strengths": ["points that help the case"],
+  "concerns": ["risks or weak points for staff to watch"],
+  "inconsistencies": ["specific data problems: expired passport, date gaps, funds below typical thresholds, missing key info, etc."],${
+    isLawyer
+      ? `
+  "documentsSummary": "a short paragraph for the lawyer summarising the documents the applicant has provided: which required documents are complete, which are incomplete or missing, and any document red flags (expired, illegible, wrong type, mismatched names/dates)",`
+      : ""
+  }
+  "suggestedNote": "a short, polite message STAFF could send to the applicant if information is missing (empty string if nothing is needed)"
 }
 Be specific and reference actual values. Do not invent data not present.`;
+}
 
 // Assess a whole category: the applicant may upload SEVERAL files for one
 // document type (e.g. a multi-page passport, or several bank statements). The

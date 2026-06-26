@@ -8,6 +8,7 @@ type Summary = {
   strengths?: string[];
   concerns?: string[];
   inconsistencies?: string[];
+  documentsSummary?: string;
   suggestedNote?: string;
 };
 
@@ -116,6 +117,12 @@ export default function CaseAssistant({ applicationId }: { applicationId: string
                   <li key={i}>{x}</li>
                 ))}
               </ul>
+            </div>
+          )}
+          {result.documentsSummary && (
+            <div>
+              <p className="text-xs font-semibold uppercase text-violet-600">📄 Documents</p>
+              <p className="mt-1 text-ink-600">{result.documentsSummary}</p>
             </div>
           )}
           {result.suggestedNote && (

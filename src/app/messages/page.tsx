@@ -23,7 +23,7 @@ export default async function MessagesPage() {
   return (
     <div className="min-h-screen">
       <AppHeader user={user} />
-      <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
+      <main className="mx-auto w-[90%] py-10">
         <h1 className="text-2xl font-bold text-ink-900">Messages</h1>
         <p className="mt-1 text-ink-500">
           Send a message to our team and read their replies here.

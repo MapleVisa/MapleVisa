@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getAI, parseJsonLoose } from "@/lib/ai";
-import { CASE_SUMMARY_SYSTEM } from "@/lib/ai/prompts";
+import { caseSummarySystem } from "@/lib/ai/prompts";
 import { getProgram } from "@/lib/programs";
+import { requiredDocsForProgram } from "@/lib/documents";
 import { saveConversation } from "@/lib/conversations";
 
 export async function POST(req: Request) {
@@ -23,15 +24,41 @@ export async function POST(req: Request) {
 
   const prog = getProgram(app.program);
   const data = JSON.parse(app.data || "{}");
-  const payload = {
+  const payload: Record<string, any> = {
     program: prog?.name ?? app.program,
     status: app.status,
     data,
   };
 
+  // Lawyers also get a document briefing: include uploaded files and the AI
+  // completeness assessment per required document category.
+  if (user.role === "LAWYER") {
+    const docs = await prisma.document.findMany({
+      where: { applicationId: app.id },
+      select: { category: true, originalName: true, mimeType: true },
+      orderBy: { createdAt: "asc" },
+    });
+    let checks: Record<string, any> = {};
+    try {
+      checks = app.docChecks ? JSON.parse(app.docChecks) : {};
+    } catch {
+      checks = {};
+    }
+    payload.documents = {
+      requiredCategories: requiredDocsForProgram(app.program).map((r) => r.category),
+      uploaded: docs.map((d) => ({ category: d.category, fileName: d.originalName })),
+      completenessByCategory: Object.fromEntries(
+        Object.entries(checks).map(([cat, c]: [string, any]) => [
+          cat,
+          { status: c?.status, present: c?.present, missing: c?.missing },
+        ])
+      ),
+    };
+  }
+
   try {
     const out = await ai.chat({
-      system: CASE_SUMMARY_SYSTEM,
+      system: caseSummarySystem(user.role as "ADMIN" | "LAWYER"),
       messages: [
         { role: "user", content: `Application data:\n${JSON.stringify(payload, null, 2)}` },
       ],

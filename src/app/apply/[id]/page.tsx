@@ -44,7 +44,7 @@ export default async function ApplicationPage({
   return (
     <div className="min-h-screen">
       <AppHeader user={user} />
-      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      <main className="mx-auto w-[90%] py-8">
         <BackButton href="/dashboard" />
         <div className="mb-6 flex items-center gap-2 text-sm text-ink-400">
           <Link href="/dashboard" className="hover:text-ink-600">

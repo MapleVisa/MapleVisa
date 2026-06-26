@@ -56,7 +56,7 @@ export default async function AdminPage() {
   return (
     <div className="min-h-screen">
       <AppHeader user={user} />
-      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <main className="mx-auto w-[90%] py-10">
         <h1 className="text-2xl font-bold text-ink-900">
           {isLawyer ? t.admin.lawyerTitle : t.admin.reviewTitle}
         </h1>

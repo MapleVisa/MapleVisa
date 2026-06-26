@@ -17,7 +17,7 @@ export default async function ApplyPage() {
   return (
     <div className="min-h-screen">
       <AppHeader user={user} />
-      <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+      <main className="mx-auto w-[90%] py-10">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-ink-900">{t.apply.chooseTitle}</h1>
           <p className="mx-auto mt-2 max-w-2xl text-ink-500">{t.apply.chooseSubtitle}</p>

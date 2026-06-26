@@ -33,7 +33,7 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen">
       <AppHeader user={user} />
-      <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+      <main className="mx-auto w-[90%] py-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="flex items-center gap-2 text-2xl font-bold text-ink-900">

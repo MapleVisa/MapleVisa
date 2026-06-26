@@ -69,7 +69,7 @@ export default async function AdminCasePage({ params }: { params: { id: string }
   return (
     <div className="min-h-screen">
       <AppHeader user={user} />
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+      <main className="mx-auto w-[90%] py-8">
         <BackButton href="/admin" />
         <div className="mb-6 flex items-center gap-2 text-sm text-ink-400">
           <Link href="/admin" className="hover:text-ink-600">

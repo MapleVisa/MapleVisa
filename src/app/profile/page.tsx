@@ -18,7 +18,7 @@ export default async function ProfilePage() {
   return (
     <div className="min-h-screen">
       <AppHeader user={user} />
-      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+      <main className="mx-auto w-[90%] py-8">
         <BackButton href="/dashboard" />
         <h1 className="text-2xl font-bold text-ink-900">Your profile</h1>
         <p className="mt-1 text-ink-500">
