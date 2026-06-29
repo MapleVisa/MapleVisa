@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import AppHeader from "@/components/AppHeader";
 import BackButton from "@/components/BackButton";
 import StatusBadge from "@/components/StatusBadge";
 import ApplicationSummary from "@/components/ApplicationSummary";
@@ -67,9 +66,7 @@ export default async function AdminCasePage({ params }: { params: { id: string }
   };
 
   return (
-    <div className="min-h-screen">
-      <AppHeader user={user} />
-      <main className="mx-auto w-[90%] py-8">
+    <>
         <BackButton href="/admin" />
         <div className="mb-6 flex items-center gap-2 text-sm text-ink-400">
           <Link href="/admin" className="hover:text-ink-600">
@@ -158,7 +155,6 @@ export default async function AdminCasePage({ params }: { params: { id: string }
             </div>
           </aside>
         </div>
-      </main>
-    </div>
+    </>
   );
 }

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import AdminShell from "@/components/AdminShell";
 import StatusBadge from "@/components/StatusBadge";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -19,7 +18,11 @@ const STATUS_LABEL: Record<string, string> = {
   REJECTED: "Closed",
 };
 
-export default async function AdminPage({ searchParams }: { searchParams: { status?: string } }) {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: { status?: string; q?: string };
+}) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   if (user.role !== "ADMIN" && user.role !== "LAWYER") redirect("/dashboard");
@@ -32,14 +35,25 @@ export default async function AdminPage({ searchParams }: { searchParams: { stat
 
   const isLawyer = user.role === "LAWYER";
   const statusFilter = searchParams?.status && STATUS_LABEL[searchParams.status] ? searchParams.status : null;
+  const q = (searchParams?.q || "").trim();
 
-  // Base scope for this role (used for counts), then optionally narrowed by the queue filter.
   const baseWhere: any = isLawyer
     ? { OR: [{ lawyerId: user.id }, { status: { in: ["VALIDATED", "WITH_LAWYER", "IN_PROCESSING"] } }] }
     : { status: { not: "DRAFT" } };
-  const where = statusFilter ? { AND: [baseWhere, { status: statusFilter }] } : baseWhere;
 
-  const [apps, grouped, unreadMessages, dbUser] = await Promise.all([
+  const filters: any[] = [baseWhere];
+  if (statusFilter) filters.push({ status: statusFilter });
+  if (q)
+    filters.push({
+      OR: [
+        { reference: { contains: q, mode: "insensitive" } },
+        { user: { fullName: { contains: q, mode: "insensitive" } } },
+        { user: { email: { contains: q, mode: "insensitive" } } },
+      ],
+    });
+  const where = filters.length > 1 ? { AND: filters } : baseWhere;
+
+  const [apps, grouped, unreadMessages] = await Promise.all([
     prisma.application.findMany({
       where,
       orderBy: [{ submittedAt: "desc" }, { updatedAt: "desc" }],
@@ -47,7 +61,6 @@ export default async function AdminPage({ searchParams }: { searchParams: { stat
     }),
     prisma.application.groupBy({ by: ["status"], _count: { _all: true }, where: baseWhere }),
     isLawyer ? Promise.resolve(0) : unreadTeamCount(),
-    prisma.user.findUnique({ where: { id: user.id }, select: { avatarKey: true } }),
   ]);
 
   const counts: Record<string, number> = {};
@@ -58,39 +71,47 @@ export default async function AdminPage({ searchParams }: { searchParams: { stat
     : ["SUBMITTED", "UNDER_REVIEW", "VALIDATED", "WITH_LAWYER"]
   ).map((k) => ({ key: k, label: STATUS_LABEL[k] }));
 
+  const heading = q
+    ? `Search: “${q}”`
+    : statusFilter
+    ? STATUS_LABEL[statusFilter]
+    : isLawyer
+    ? t.admin.lawyerTitle
+    : t.admin.reviewTitle;
+
   return (
-    <AdminShell user={user} avatarKey={dbUser?.avatarKey} counts={counts} unread={unreadMessages}>
+    <>
       <div className="flex items-center gap-3">
-        <h1 className="text-xl font-bold text-ink-900">
-          {statusFilter ? STATUS_LABEL[statusFilter] : isLawyer ? t.admin.lawyerTitle : t.admin.reviewTitle}
-        </h1>
-        {statusFilter && (
+        <h1 className="text-xl font-bold text-ink-900">{heading}</h1>
+        {(statusFilter || q) && (
           <Link href="/admin" className="text-sm text-ink-400 hover:text-ink-700">
-            Clear filter
+            Clear
           </Link>
         )}
       </div>
 
-      {/* Metric cards */}
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {statCards.map((q) => (
-          <Link
-            key={q.key}
-            href={`/admin?status=${q.key}`}
-            className={`rounded-xl bg-white px-4 py-3 transition hover:shadow-soft ${
-              statusFilter === q.key ? "ring-2 ring-brand-400" : "border border-ink-200"
-            }`}
-          >
-            <div className="text-2xl font-bold text-ink-900">{counts[q.key] || 0}</div>
-            <div className="text-xs text-ink-500">{q.label}</div>
-          </Link>
-        ))}
-      </div>
+      {!q && (
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {statCards.map((s) => (
+            <Link
+              key={s.key}
+              href={`/admin?status=${s.key}`}
+              className={`rounded-xl bg-white px-4 py-3 transition hover:shadow-soft ${
+                statusFilter === s.key ? "ring-2 ring-brand-400" : "border border-ink-200"
+              }`}
+            >
+              <div className="text-2xl font-bold text-ink-900">{counts[s.key] || 0}</div>
+              <div className="text-xs text-ink-500">{s.label}</div>
+            </Link>
+          ))}
+        </div>
+      )}
 
-      {/* Applications table */}
       <div className="card mt-6 overflow-hidden">
         {apps.length === 0 ? (
-          <div className="px-6 py-16 text-center text-ink-400">{t.admin.empty}</div>
+          <div className="px-6 py-16 text-center text-ink-400">
+            {q ? `No applications match “${q}”.` : t.admin.empty}
+          </div>
         ) : (
           <table className="w-full text-left text-sm">
             <thead className="border-b border-ink-200 bg-ink-50 text-xs uppercase tracking-wide text-ink-500">
@@ -107,6 +128,7 @@ export default async function AdminPage({ searchParams }: { searchParams: { stat
                 <tr key={a.id} className="hover:bg-ink-50/60">
                   <td className="px-5 py-4">
                     <div className="font-semibold text-ink-900">{a.user.fullName}</div>
+                    <div className="text-xs text-ink-400">{a.user.email}</div>
                     <div className="font-mono text-xs text-ink-400">{a.reference}</div>
                   </td>
                   <td className="px-5 py-4 text-ink-700">{programNames[a.program] ?? a.program}</td>
@@ -126,9 +148,9 @@ export default async function AdminPage({ searchParams }: { searchParams: { stat
         )}
       </div>
 
-      {!isLawyer && (
+      {!isLawyer && !q && (
         <Link
-          href="/messages"
+          href="/admin/messages"
           className="card mt-6 flex items-center justify-between p-5 transition hover:shadow-card"
         >
           <div>
@@ -147,6 +169,6 @@ export default async function AdminPage({ searchParams }: { searchParams: { stat
           </div>
         </Link>
       )}
-    </AdminShell>
+    </>
   );
 }

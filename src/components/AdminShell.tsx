@@ -26,6 +26,12 @@ const ICONS = {
     </>
   ),
   message: <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />,
+  ai: (
+    <>
+      <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
+      <path d="M12 8.5 13.2 11l2.5 1-2.5 1L12 15.5 10.8 13l-2.5-1 2.5-1z" />
+    </>
+  ),
   search: (
     <>
       <circle cx="11" cy="11" r="8" />
@@ -74,8 +80,10 @@ export default function AdminShell({
   const isLawyer = user.role === "LAWYER";
   const isAdmin = user.role === "ADMIN";
 
-  const inQueue = path === "/admin" || (path.startsWith("/admin/") && !path.startsWith("/admin/users"));
   const inUsers = path.startsWith("/admin/users");
+  const inMessages = path.startsWith("/admin/messages");
+  const inAI = path.startsWith("/admin/ai");
+  const inQueue = !inUsers && !inMessages && !inAI; // /admin and /admin/[id]
 
   const queues = isLawyer
     ? [
@@ -94,7 +102,8 @@ export default function AdminShell({
   const railItems = [
     { href: "/admin", label: "Queue", icon: "grid" as const, active: inQueue },
     ...(isAdmin ? [{ href: "/admin/users", label: "Users", icon: "users" as const, active: inUsers }] : []),
-    { href: "/messages", label: "Chat", icon: "message" as const, active: false },
+    { href: "/admin/messages", label: "Chat", icon: "message" as const, active: inMessages },
+    { href: "/admin/ai", label: "AI", icon: "ai" as const, active: inAI },
   ];
 
   const navCls = (active: boolean) =>
@@ -138,11 +147,14 @@ export default function AdminShell({
               <Icon name="users" className="h-4 w-4" /> Users
             </Link>
           )}
-          <Link href="/messages" className={navCls(false)}>
+          <Link href="/admin/messages" className={navCls(inMessages)}>
             <Icon name="message" className="h-4 w-4" /> Messages
             {unread > 0 && (
               <span className="ms-auto rounded-full bg-brand-600 px-1.5 text-xs font-bold text-white">{unread}</span>
             )}
+          </Link>
+          <Link href="/admin/ai" className={navCls(inAI)}>
+            <Icon name="ai" className="h-4 w-4" /> AI assistant
           </Link>
         </div>
 
@@ -167,12 +179,15 @@ export default function AdminShell({
       {/* Main column */}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 shrink-0 items-center gap-3 border-b border-ink-200 bg-white px-4">
-          <Link
-            href="/admin"
-            className="flex h-9 w-full max-w-sm items-center gap-2 rounded-lg border border-ink-200 px-3 text-sm text-ink-400 hover:bg-ink-50"
-          >
-            <Icon name="search" className="h-4 w-4" /> Search applications
-          </Link>
+          <form action="/admin" method="GET" className="flex h-9 w-full max-w-sm items-center gap-2 rounded-lg border border-ink-200 px-3 focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100">
+            <Icon name="search" className="h-4 w-4 text-ink-400" />
+            <input
+              name="q"
+              type="search"
+              placeholder="Search applications by name, email or reference"
+              className="w-full bg-transparent text-sm text-ink-800 outline-none placeholder:text-ink-400"
+            />
+          </form>
           <div className="flex-1" />
           <LanguageSwitcher compact />
           <Link href="/profile" className="flex items-center gap-2 rounded-full p-0.5 pe-2 hover:bg-ink-100" title="Your profile">

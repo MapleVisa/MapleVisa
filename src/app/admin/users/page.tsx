@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import AppHeader from "@/components/AppHeader";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
@@ -69,10 +68,8 @@ export default async function AdminUsersPage({
   const activeTab = roleParam ?? "all";
 
   return (
-    <div className="min-h-screen">
-      <AppHeader user={user} />
-      <main className="mx-auto w-[90%] py-10">
-        <h1 className="text-2xl font-bold text-ink-900">Users</h1>
+    <>
+      <h1 className="text-2xl font-bold text-ink-900">Users</h1>
         <p className="mt-1 text-ink-500">
           Everyone registered on the portal. Click a name to view their profile, applications, and
           message history.
@@ -160,7 +157,6 @@ export default async function AdminUsersPage({
             </table>
           )}
         </div>
-      </main>
-    </div>
+    </>
   );
 }

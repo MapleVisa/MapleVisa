@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import AppHeader from "@/components/AppHeader";
 import BackButton from "@/components/BackButton";
 import StatusBadge from "@/components/StatusBadge";
 import { getCurrentUser } from "@/lib/auth";
@@ -35,10 +34,8 @@ export default async function AdminUserProfilePage({ params }: { params: { id: s
     d ? new Date(d).toLocaleDateString(locale, { year: "numeric", month: "short", day: "numeric" }) : "—";
 
   return (
-    <div className="min-h-screen">
-      <AppHeader user={staff} />
-      <main className="mx-auto w-[90%] py-8">
-        <BackButton href="/admin/users" />
+    <>
+      <BackButton href="/admin/users" />
         <div className="mb-6 flex items-center gap-2 text-sm text-ink-400">
           <Link href="/admin/users" className="hover:text-ink-600">
             Users
@@ -96,7 +93,7 @@ export default async function AdminUserProfilePage({ params }: { params: { id: s
                 <p className="mt-2 text-sm text-ink-500">
                   Message this applicant directly — text, voice notes and documents.
                 </p>
-                <Link href={`/messages?with=${profile.id}`} className="btn-primary mt-4 w-full gap-2">
+                <Link href={`/admin/messages?with=${profile.id}`} className="btn-primary mt-4 w-full gap-2">
                   💬 Open chat with {profile.fullName.split(" ")[0]}
                 </Link>
               </div>
@@ -107,7 +104,6 @@ export default async function AdminUserProfilePage({ params }: { params: { id: s
             )}
           </aside>
         </div>
-      </main>
-    </div>
+    </>
   );
 }
