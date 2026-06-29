@@ -95,7 +95,10 @@ export async function POST(req: Request) {
   } | null = null;
 
   if (file) {
-    const ext = CHAT_MIME_EXT[file.type];
+    // Browsers report voice MIME like "audio/webm;codecs=opus" — strip params.
+    const baseMime = (file.type || "").split(";")[0].trim();
+    // Any audio type is accepted as a voice note; otherwise must be a known doc type.
+    const ext = CHAT_MIME_EXT[baseMime] || (baseMime.startsWith("audio/") ? "webm" : undefined);
     if (!ext) {
       return NextResponse.json(
         { error: "Unsupported file type. Allowed: images, PDF, and audio." },
@@ -106,11 +109,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "File is too large." }, { status: 400 });
     }
     const buffer = Buffer.from(await file.arrayBuffer());
-    const storedName = await saveFile("messages", `${randomUUID()}.${ext}`, buffer, file.type);
+    const storedName = await saveFile("messages", `${randomUUID()}.${ext}`, buffer, baseMime);
     attachment = {
       key: storedName,
       name: file.name?.slice(0, 200) || (kind === "VOICE" ? "Voice message" : `file.${ext}`),
-      mime: file.type,
+      mime: baseMime,
       size: file.size,
     };
     if (kind !== "VOICE") kind = "FILE";

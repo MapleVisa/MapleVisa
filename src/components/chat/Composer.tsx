@@ -86,11 +86,12 @@ export default function Composer({
       chunksRef.current = [];
       mr.ondataavailable = (ev) => ev.data.size && chunksRef.current.push(ev.data);
       mr.onstop = () => {
-        const type = mr.mimeType || mime || "audio/webm";
-        const blob = new Blob(chunksRef.current, { type });
-        const ext = type.includes("mp4") ? "m4a" : type.includes("ogg") ? "ogg" : "webm";
+        const rawType = mr.mimeType || mime || "audio/webm";
+        const base = rawType.split(";")[0].trim(); // drop ";codecs=opus"
+        const blob = new Blob(chunksRef.current, { type: rawType });
+        const ext = base.includes("mp4") ? "m4a" : base.includes("ogg") ? "ogg" : "webm";
         const dur = Math.max(1, Math.round((Date.now() - startedAt.current) / 1000));
-        sendFile(new File([blob], `voice.${ext}`, { type }), "VOICE", dur);
+        sendFile(new File([blob], `voice.${ext}`, { type: base }), "VOICE", dur);
         stream.getTracks().forEach((t) => t.stop());
       };
       mr.start();
@@ -158,20 +159,21 @@ export default function Composer({
             placeholder="Type a message…"
             className="input max-h-32 min-h-[40px] flex-1 resize-none py-2"
           />
-          {text.trim() ? (
-            <button onClick={sendText} disabled={busy} className="btn-primary h-10 shrink-0 px-4">
-              Send
-            </button>
-          ) : (
-            <button
-              onClick={startRecording}
-              disabled={busy}
-              title="Record a voice note"
-              className="btn-ghost h-10 w-10 shrink-0 p-0 text-lg"
-            >
-              🎤
-            </button>
-          )}
+          <button
+            onClick={startRecording}
+            disabled={busy}
+            title="Record a voice note"
+            className="btn-ghost h-10 w-10 shrink-0 p-0 text-lg"
+          >
+            🎤
+          </button>
+          <button
+            onClick={sendText}
+            disabled={busy || !text.trim()}
+            className="btn-primary h-10 shrink-0 px-4 disabled:opacity-40"
+          >
+            Send
+          </button>
         </div>
       )}
     </div>
