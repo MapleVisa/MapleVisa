@@ -2,12 +2,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import StatusBadge from "@/components/StatusBadge";
-import MessageList from "@/components/MessageList";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { localizeProgramNames } from "@/lib/i18n/programs";
 import { getDictionary, getLocale } from "@/i18n";
-import { listTeamInbox } from "@/lib/messages";
+import { unreadTeamCount } from "@/lib/messages";
 
 export default async function AdminPage() {
   const user = await getCurrentUser();
@@ -32,8 +31,8 @@ export default async function AdminPage() {
     include: { user: true, lawyer: true },
   });
 
-  // Messages applicants have sent to the staff team (admin landing only).
-  const teamMessages = isLawyer ? [] : await listTeamInbox(50);
+  // Unread chat messages from applicants (admin landing only).
+  const unreadMessages = isLawyer ? 0 : await unreadTeamCount();
 
   // Group counts
   const counts: Record<string, number> = {};
@@ -117,17 +116,25 @@ export default async function AdminPage() {
 
         {!isLawyer && (
           <section className="mt-10">
-            <h2 className="text-lg font-bold text-ink-900">Messages from users</h2>
-            <p className="mt-1 text-sm text-ink-500">
-              Messages applicants have sent to the team. Open an applicant to reply.
-            </p>
-            <div className="card mt-4 p-6">
-              <MessageList
-                messages={teamMessages}
-                viewerIsStaff
-                emptyText="No messages from users yet."
-              />
-            </div>
+            <Link
+              href="/messages"
+              className="card flex items-center justify-between p-5 transition hover:shadow-card"
+            >
+              <div>
+                <h2 className="text-lg font-bold text-ink-900">💬 Messages from users</h2>
+                <p className="mt-1 text-sm text-ink-500">
+                  Open the chat to reply to applicants — text, voice notes and documents.
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                {unreadMessages > 0 && (
+                  <span className="rounded-full bg-brand-600 px-2.5 py-1 text-sm font-bold text-white">
+                    {unreadMessages} new
+                  </span>
+                )}
+                <span className="text-brand-600">→</span>
+              </div>
+            </Link>
           </section>
         )}
       </main>

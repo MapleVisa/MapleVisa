@@ -8,7 +8,7 @@ import MessageComposer from "@/components/MessageComposer";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { localizeProgramNames } from "@/lib/i18n/programs";
-import { listMessagesForUser } from "@/lib/messages";
+import { listThread } from "@/lib/messages";
 import { getLocale } from "@/i18n";
 
 const ROLE_LABEL: Record<string, string> = {
@@ -32,7 +32,7 @@ export default async function AdminUserProfilePage({ params }: { params: { id: s
 
   const locale = await getLocale();
   const programNames = await localizeProgramNames(locale);
-  const messages = await listMessagesForUser(profile.id);
+  const messages = await listThread(profile.id);
   const isApplicant = profile.role === "APPLICANT";
 
   const fmtDate = (d: Date | null) =>

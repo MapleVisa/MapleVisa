@@ -68,6 +68,15 @@ model Message {
   application   Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   subject       String?
   body          String       @db.Text
+
+  // Chat attachments. kind: TEXT | VOICE | FILE
+  kind           String  @default("TEXT")
+  attachmentKey  String? // storage key (served via /api/messages/[id]/attachment)
+  attachmentName String?
+  attachmentMime String?
+  attachmentSize Int?
+  durationSec    Int? // voice-note length
+
   readAt        DateTime?
   createdAt     DateTime     @default(now())
 

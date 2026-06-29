@@ -33,6 +33,9 @@ export default async function AppHeader({ user }: { user: SessionUser }) {
                     Users
                   </Link>
                 )}
+                <Link href="/messages" className="btn-ghost">
+                  Messages
+                </Link>
               </>
             ) : (
               <>
