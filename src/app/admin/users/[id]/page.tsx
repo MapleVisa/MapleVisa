@@ -3,12 +3,9 @@ import { redirect } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import BackButton from "@/components/BackButton";
 import StatusBadge from "@/components/StatusBadge";
-import MessageList from "@/components/MessageList";
-import MessageComposer from "@/components/MessageComposer";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { localizeProgramNames } from "@/lib/i18n/programs";
-import { listThread } from "@/lib/messages";
 import { getLocale } from "@/i18n";
 
 const ROLE_LABEL: Record<string, string> = {
@@ -32,7 +29,6 @@ export default async function AdminUserProfilePage({ params }: { params: { id: s
 
   const locale = await getLocale();
   const programNames = await localizeProgramNames(locale);
-  const messages = await listThread(profile.id);
   const isApplicant = profile.role === "APPLICANT";
 
   const fmtDate = (d: Date | null) =>
@@ -90,29 +86,23 @@ export default async function AdminUserProfilePage({ params }: { params: { id: s
               )}
             </div>
 
-            {/* Message history */}
-            <div className="card p-6">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-400">
-                Message history
-              </h2>
-              <div className="mt-4">
-                <MessageList messages={messages} viewerIsStaff emptyText="No messages with this user yet." />
-              </div>
-            </div>
           </div>
 
-          {/* Composer */}
+          {/* Chat */}
           <aside className="space-y-6 lg:sticky lg:top-20 lg:self-start">
-            <div id="message" />
             {isApplicant ? (
-              <MessageComposer
-                toUserId={profile.id}
-                title="Email this user"
-                placeholder="Write a message to this applicant…"
-              />
+              <div className="card p-6">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-400">Chat</h2>
+                <p className="mt-2 text-sm text-ink-500">
+                  Message this applicant directly — text, voice notes and documents.
+                </p>
+                <Link href={`/messages?with=${profile.id}`} className="btn-primary mt-4 w-full gap-2">
+                  💬 Open chat with {profile.fullName.split(" ")[0]}
+                </Link>
+              </div>
             ) : (
               <div className="card p-6 text-sm text-ink-400">
-                Messaging is available for applicants.
+                Chat is available for applicants.
               </div>
             )}
           </aside>

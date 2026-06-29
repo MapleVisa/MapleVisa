@@ -18,9 +18,19 @@ function preview(m: Thread["lastMessage"]) {
 
 // Applicants get a single chat with the team. Staff get a conversation list
 // (one per applicant, by name) plus the active chat — like a messaging app.
-export default function ChatApp({ meId, isStaff }: { meId: string; isStaff: boolean }) {
+export default function ChatApp({
+  meId,
+  isStaff,
+  initialActiveId = null,
+  initialName,
+}: {
+  meId: string;
+  isStaff: boolean;
+  initialActiveId?: string | null;
+  initialName?: string;
+}) {
   const [threads, setThreads] = useState<Thread[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(initialActiveId);
 
   const loadThreads = useCallback(async () => {
     if (!isStaff) return;
@@ -96,7 +106,7 @@ export default function ChatApp({ meId, isStaff }: { meId: string; isStaff: bool
             key={activeId}
             meId={meId}
             withId={activeId}
-            headerName={active?.applicant.fullName}
+            headerName={active?.applicant.fullName ?? initialName}
           />
         ) : (
           <div className="flex h-full items-center justify-center p-6 text-center text-sm text-ink-400">
