@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { readFile } from "@/lib/storage";
 import { getAI, parseJsonLoose } from "@/lib/ai";
 import { DOC_CHECK_SYSTEM } from "@/lib/ai/prompts";
+import { rateLimit, tooMany } from "@/lib/rate-limit";
 
 export async function POST(_req: Request, { params }: { params: { id: string } }) {
   const user = await getCurrentUser();
@@ -19,6 +20,9 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
   if (doc.application.userId !== user.id && !isStaff) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+
+  const rl = await rateLimit(`ai:${user.id}`, 30, 300);
+  if (!rl.ok) return tooMany(rl.retryAfter);
 
   const ai = getAI();
   if (!ai.isConfigured()) {

@@ -5,10 +5,14 @@ import { eligibilitySystem } from "@/lib/ai/prompts";
 import { saveConversation, type StoredMessage } from "@/lib/conversations";
 import { getLocale } from "@/i18n";
 import type { ChatMessage } from "@/lib/ai/types";
+import { rateLimit, tooMany } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const rl = await rateLimit(`ai:${user.id}`, 30, 300);
+  if (!rl.ok) return tooMany(rl.retryAfter);
 
   const ai = getAI();
   if (!ai.isConfigured()) {

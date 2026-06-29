@@ -6,12 +6,16 @@ import { caseSummarySystem } from "@/lib/ai/prompts";
 import { getProgram } from "@/lib/programs";
 import { requiredDocsForProgram } from "@/lib/documents";
 import { saveConversation } from "@/lib/conversations";
+import { rateLimit, tooMany } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user || (user.role !== "ADMIN" && user.role !== "LAWYER")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+
+  const rl = await rateLimit(`ai:${user.id}`, 30, 300);
+  if (!rl.ok) return tooMany(rl.retryAfter);
 
   const ai = getAI();
   if (!ai.isConfigured()) {

@@ -5,6 +5,7 @@ import { readFile } from "@/lib/storage";
 import { getAI, parseJsonLoose } from "@/lib/ai";
 import { docCategoryCheckSystem } from "@/lib/ai/prompts";
 import { requiredDocsForProgram, statusForCompleteness } from "@/lib/documents";
+import { rateLimit, tooMany } from "@/lib/rate-limit";
 
 const MAX_FILES_PER_CHECK = 8;
 
@@ -24,6 +25,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const app = await canAccess(params.id, user.id, user.role);
   if (!app) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const rl = await rateLimit(`ai:${user.id}`, 30, 300);
+  if (!rl.ok) return tooMany(rl.retryAfter);
 
   const body = await req.json().catch(() => null);
   const category = String(body?.category || "");

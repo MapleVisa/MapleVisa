@@ -23,6 +23,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
+  // Block sign-in until the email is verified.
+  if (!user.emailVerified) {
+    return NextResponse.json(
+      { error: "Please verify your email before signing in. Check your inbox for the link.", code: "EMAIL_NOT_VERIFIED" },
+      { status: 403 }
+    );
+  }
+
   await createSession({
     id: user.id,
     email: user.email,

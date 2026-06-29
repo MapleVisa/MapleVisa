@@ -20,12 +20,28 @@ model User {
   address      String?
   avatarKey    String? // storage key of the profile image (served via /api/avatar/[id])
   role         String        @default("APPLICANT")
+  emailVerified DateTime? // null until the user verifies their email
   createdAt    DateTime      @default(now())
   applications Application[] @relation("OwnerApplications")
   lawyerCases  Application[] @relation("LawyerCases")
   conversations Conversation[]
   sentMessages     Message[] @relation("SentMessages")
   receivedMessages Message[] @relation("ReceivedMessages")
+  authTokens   AuthToken[]
+}
+
+// Single-use, time-limited tokens for email verification and password reset.
+// Only the SHA-256 hash of the token is stored; the raw token is emailed.
+model AuthToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // VERIFY | RESET
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 // status: DRAFT | SUBMITTED | UNDER_REVIEW | NEEDS_INFO | VALIDATED | WITH_LAWYER | IN_PROCESSING | APPROVED | REJECTED
