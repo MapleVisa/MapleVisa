@@ -4,6 +4,7 @@ import path from "path";
 import { PROGRAMS, getProgram, type Program, type Section, type Field } from "@/lib/programs";
 import { getAI, parseJsonLoose } from "@/lib/ai";
 import type { Locale } from "@/i18n/config";
+import { GENERATED } from "@/i18n/generated";
 
 // =============================================================================
 // Form schema localization.
@@ -123,7 +124,9 @@ async function translateChunk(items: string[], locale: Locale): Promise<StringMa
 
 async function buildMap(locale: Locale): Promise<StringMap> {
   const strings = collectStrings();
-  let map = readCache(locale);
+  // Bundled (committed) translations are the primary source — instant, no AI.
+  // The on-disk cache (dev only) overlays any locally-generated extras.
+  let map: StringMap = { ...(GENERATED[locale] || {}), ...readCache(locale) };
   const missing = strings.filter((s) => !(s in map));
 
   if (missing.length && getAI().isConfigured()) {

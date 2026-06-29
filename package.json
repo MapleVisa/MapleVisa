@@ -10,6 +10,7 @@
     "db:push": "prisma db push",
     "db:seed": "node prisma/seed.mjs",
     "db:studio": "prisma studio",
+    "i18n:translate": "tsx --env-file=.env scripts/translate-programs.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -32,6 +33,7 @@
     "postcss": "8.4.47",
     "prisma": "5.22.0",
     "tailwindcss": "3.4.14",
+    "tsx": "^4.22.4",
     "typescript": "5.6.3"
   }
 }
