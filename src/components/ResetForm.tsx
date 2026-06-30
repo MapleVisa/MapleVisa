@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import PasswordStrength from "./PasswordStrength";
 
 export default function ResetForm({ token }: { token: string }) {
   const router = useRouter();
@@ -52,6 +53,7 @@ export default function ResetForm({ token }: { token: string }) {
       <div>
         <label className="label" htmlFor="password">New password</label>
         <input id="password" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} className="input" placeholder="At least 8 characters" />
+        <PasswordStrength password={password} />
       </div>
       <div>
         <label className="label" htmlFor="confirm">Confirm password</label>

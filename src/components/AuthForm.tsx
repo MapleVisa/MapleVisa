@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useT } from "@/i18n/IntlProvider";
+import PasswordStrength from "./PasswordStrength";
 
 export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const router = useRouter();
@@ -12,6 +13,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [verifySent, setVerifySent] = useState(false);
   const [showResend, setShowResend] = useState(false);
 
@@ -146,7 +148,10 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
           required
           minLength={mode === "signup" ? 8 : undefined}
           placeholder={mode === "signup" ? t.auth.passwordHint : "••••••••"}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
         />
+        {mode === "signup" && <PasswordStrength password={password} />}
       </div>
 
       <button type="submit" disabled={loading} className="btn-primary w-full py-3">
