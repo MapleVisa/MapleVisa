@@ -29,7 +29,7 @@ export default async function AuthLayout({
             ))}
           </ul>
         </div>
-        <p className="text-sm text-brand-100/80">© {new Date().getFullYear()} Maple Visa</p>
+        <p className="text-sm text-brand-100/80">© {new Date().getFullYear()} AI Visa</p>
       </div>
 
       <div className="flex items-center justify-center p-6 sm:p-12">

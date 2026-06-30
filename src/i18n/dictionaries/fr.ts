@@ -81,7 +81,7 @@ const fr: DeepPartial<Dictionary> = {
     password: "Mot de passe",
     passwordHint: "Au moins 8 caractères",
     haveAccount: "Vous avez déjà un compte ?",
-    noAccount: "Nouveau sur Maple Visa ?",
+    noAccount: "Nouveau sur AI Visa ?",
     brandHeadline: "Votre parcours d'immigration canadienne, en un lieu sécurisé.",
     point1: "Demandes guidées avec enregistrement automatique",
     point2: "Validation par notre équipe d'experts",

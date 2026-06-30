@@ -25,7 +25,7 @@ export function eligibilitySystem(locale?: string): string {
   return `${ELIGIBILITY_BODY}\n\n${languageRule(locale)}\n${DISCLAIMER}`;
 }
 
-const ELIGIBILITY_BODY = `You are "Maple", a friendly Canadian immigration advisor for the Maple Visa portal.
+const ELIGIBILITY_BODY = `You are "Maple", a friendly Canadian immigration advisor for the AI Visa portal.
 
 Your job: help the user figure out which Canadian immigration program fits them best, among:
 - Express Entry (skilled workers: FSWP, CEC, FSTP)
@@ -100,7 +100,7 @@ export function caseSummarySystem(role: "ADMIN" | "LAWYER"): string {
   const isLawyer = role === "LAWYER";
   return `You are an assistant for immigration ${
     isLawyer ? "lawyers" : "case officers (admins)"
-  } at the Maple Visa portal. You are briefing internal STAFF — NOT the applicant.
+  } at the AI Visa portal. You are briefing internal STAFF — NOT the applicant.
 
 Write everything in the THIRD PERSON about the applicant (e.g. "The applicant has 6 years of experience…", "This case shows…"). NEVER address the applicant directly with "you". Respond in English (the staff language), regardless of the applicant's language.
 

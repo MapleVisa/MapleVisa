@@ -78,7 +78,7 @@ const en = {
     password: "Password",
     passwordHint: "At least 8 characters",
     haveAccount: "Already have an account?",
-    noAccount: "New to Maple Visa?",
+    noAccount: "New to AI Visa?",
     brandHeadline: "Your Canadian immigration journey, in one secure place.",
     point1: "Guided, save-as-you-go applications",
     point2: "Expert validation by our case team",

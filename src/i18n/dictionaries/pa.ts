@@ -81,7 +81,7 @@ const pa: DeepPartial<Dictionary> = {
     password: "ਪਾਸਵਰਡ",
     passwordHint: "ਘੱਟੋ-ਘੱਟ 8 ਅੱਖਰ",
     haveAccount: "ਪਹਿਲਾਂ ਤੋਂ ਖਾਤਾ ਹੈ?",
-    noAccount: "Maple Visa 'ਤੇ ਨਵੇਂ ਹੋ?",
+    noAccount: "AI Visa 'ਤੇ ਨਵੇਂ ਹੋ?",
     brandHeadline: "ਤੁਹਾਡੀ ਕੈਨੇਡਾ ਇਮੀਗ੍ਰੇਸ਼ਨ ਯਾਤਰਾ, ਇੱਕ ਸੁਰੱਖਿਅਤ ਥਾਂ 'ਤੇ।",
     point1: "ਮਾਰਗਦਰਸ਼ਿਤ ਅਰਜ਼ੀਆਂ, ਆਪਣੇ-ਆਪ ਸੰਭਾਲੀਆਂ",
     point2: "ਸਾਡੀ ਮਾਹਰ ਟੀਮ ਵੱਲੋਂ ਪੁਸ਼ਟੀ",

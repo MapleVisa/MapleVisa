@@ -7,7 +7,7 @@ export default function Logo({ href = "/" }: { href?: string }) {
         🍁
       </span>
       <span className="text-lg tracking-tight">
-        Maple<span className="text-brand-600">Visa</span>
+        AI <span className="text-brand-600">Visa</span>
       </span>
     </Link>
   );

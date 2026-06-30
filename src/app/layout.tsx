@@ -8,9 +8,9 @@ import { IntlProvider } from "@/i18n/IntlProvider";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Maple Visa — Canadian Immigration Applications",
+  title: "AI Visa — Canadian Immigration Applications",
   description:
-    "Apply for Canadian permanent residence with Maple Visa. Express Entry, Provincial Nominee, Family Sponsorship and Business immigration — reviewed by experts and processed by licensed lawyers.",
+    "Apply for Canadian permanent residence with AI Visa. Express Entry, Provincial Nominee, Family Sponsorship and Business immigration — reviewed by experts and processed by licensed lawyers.",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

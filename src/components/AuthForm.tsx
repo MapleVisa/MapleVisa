@@ -137,14 +137,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
       )}
 
       <div>
-        <div className="flex items-center justify-between">
-          <label className="label" htmlFor="password">{t.auth.password}</label>
-          {mode === "login" && (
-            <Link href="/forgot" className="mb-1.5 text-sm font-semibold text-brand-600 hover:underline">
-              Forgot password?
-            </Link>
-          )}
-        </div>
+        <label className="label" htmlFor="password">{t.auth.password}</label>
         <input
           id="password"
           name="password"
@@ -159,6 +152,14 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
       <button type="submit" disabled={loading} className="btn-primary w-full py-3">
         {loading ? t.common.loading : mode === "signup" ? t.common.signup : t.common.login}
       </button>
+
+      {mode === "login" && (
+        <p className="text-center">
+          <Link href="/forgot" className="text-sm font-semibold text-brand-600 hover:underline">
+            Forgot password?
+          </Link>
+        </p>
+      )}
 
       <p className="text-center text-sm text-ink-500">
         {mode === "signup" ? (

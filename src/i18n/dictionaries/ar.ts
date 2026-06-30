@@ -81,7 +81,7 @@ const ar: DeepPartial<Dictionary> = {
     password: "كلمة المرور",
     passwordHint: "8 أحرف على الأقل",
     haveAccount: "لديك حساب بالفعل؟",
-    noAccount: "جديد على ميبل فيزا؟",
+    noAccount: "جديد على AI Visa؟",
     brandHeadline: "رحلة هجرتك إلى كندا، في مكان آمن واحد.",
     point1: "طلبات موجّهة مع حفظ تلقائي",
     point2: "تحقق من قبل فريق الخبراء",

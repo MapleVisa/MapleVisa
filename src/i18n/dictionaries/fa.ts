@@ -81,7 +81,7 @@ const fa: DeepPartial<Dictionary> = {
     password: "گذرواژه",
     passwordHint: "حداقل ۸ نویسه",
     haveAccount: "از قبل حساب دارید؟",
-    noAccount: "تازه به میپل ویزا پیوسته‌اید؟",
+    noAccount: "تازه به AI Visa پیوسته‌اید؟",
     brandHeadline: "سفر مهاجرتی شما به کانادا، در یک مکان امن.",
     point1: "درخواست‌های راهنمایی‌شده با ذخیره خودکار",
     point2: "تأیید تخصصی توسط تیم کارشناسان ما",

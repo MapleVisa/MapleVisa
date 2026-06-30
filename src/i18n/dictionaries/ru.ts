@@ -81,7 +81,7 @@ const ru: DeepPartial<Dictionary> = {
     password: "Пароль",
     passwordHint: "Не менее 8 символов",
     haveAccount: "Уже есть аккаунт?",
-    noAccount: "Впервые в Maple Visa?",
+    noAccount: "Впервые в AI Visa?",
     brandHeadline: "Ваш путь иммиграции в Канаду — в одном защищённом месте.",
     point1: "Пошаговые заявки с автосохранением",
     point2: "Проверка нашей командой экспертов",

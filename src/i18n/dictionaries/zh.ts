@@ -81,7 +81,7 @@ const zh: DeepPartial<Dictionary> = {
     password: "密码",
     passwordHint: "至少 8 个字符",
     haveAccount: "已有账户？",
-    noAccount: "初次使用 Maple Visa？",
+    noAccount: "初次使用 AI Visa？",
     brandHeadline: "您的加拿大移民之旅，尽在一个安全平台。",
     point1: "引导式申请，自动保存",
     point2: "由专家团队审核验证",

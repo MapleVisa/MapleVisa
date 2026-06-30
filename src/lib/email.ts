@@ -1,7 +1,7 @@
 import "server-only";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const EMAIL_FROM = process.env.EMAIL_FROM || "Maple Visa <onboarding@resend.dev>";
+const EMAIL_FROM = process.env.EMAIL_FROM || "AI Visa <onboarding@resend.dev>";
 
 export const emailConfigured = !!RESEND_API_KEY;
 
@@ -39,7 +39,7 @@ export async function sendEmail(opts: { to: string; subject: string; html: strin
 
 function shell(title: string, intro: string, buttonLabel: string, link: string, footer: string): string {
   return `<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#1f2937">
-    <div style="font-size:20px;font-weight:bold;color:#A32D2D;margin-bottom:16px">🍁 Maple Visa</div>
+    <div style="font-size:20px;font-weight:bold;color:#A32D2D;margin-bottom:16px">🍁 AI Visa</div>
     <h1 style="font-size:18px;margin:0 0 8px">${title}</h1>
     <p style="font-size:14px;line-height:1.6;color:#374151">${intro}</p>
     <p style="margin:24px 0"><a href="${link}" style="background:#A32D2D;color:#fff;text-decoration:none;padding:11px 20px;border-radius:8px;font-size:14px;font-weight:bold;display:inline-block">${buttonLabel}</a></p>
@@ -51,10 +51,10 @@ function shell(title: string, intro: string, buttonLabel: string, link: string, 
 export function sendVerificationEmail(to: string, link: string) {
   return sendEmail({
     to,
-    subject: "Verify your email · Maple Visa",
+    subject: "Verify your email · AI Visa",
     html: shell(
       "Confirm your email address",
-      "Welcome to Maple Visa. Please confirm your email address to activate your account and sign in.",
+      "Welcome to AI Visa. Please confirm your email address to activate your account and sign in.",
       "Verify email",
       link,
       "This link expires in 24 hours. If you didn't create an account, you can ignore this email."
@@ -65,10 +65,10 @@ export function sendVerificationEmail(to: string, link: string) {
 export function sendResetEmail(to: string, link: string) {
   return sendEmail({
     to,
-    subject: "Reset your password · Maple Visa",
+    subject: "Reset your password · AI Visa",
     html: shell(
       "Reset your password",
-      "We received a request to reset your Maple Visa password. Click below to choose a new one.",
+      "We received a request to reset your AI Visa password. Click below to choose a new one.",
       "Reset password",
       link,
       "This link expires in 1 hour. If you didn't request this, you can safely ignore this email — your password won't change."

@@ -136,7 +136,7 @@ export default function AdminShell({
       <aside className="hidden w-56 shrink-0 flex-col border-r border-ink-200 bg-white md:flex">
         <div className="flex h-14 items-center gap-2 border-b border-ink-200 px-4">
           <span className="flex h-5 w-5 items-center justify-center rounded bg-brand-600 text-[11px] font-bold text-white">M</span>
-          <span className="text-sm font-semibold text-ink-900">Maple Visa</span>
+          <span className="text-sm font-semibold text-ink-900">AI Visa</span>
         </div>
         <div className="flex flex-col gap-0.5 p-2">
           <Link href="/admin" className={navCls(inQueue)}>

@@ -116,7 +116,7 @@ export default async function Home() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 sm:flex-row sm:px-6">
           <Logo />
           <p className="text-sm text-ink-400">
-            © {new Date().getFullYear()} Maple Visa. {t.landing.footerNote}
+            © {new Date().getFullYear()} AI Visa. {t.landing.footerNote}
           </p>
         </div>
       </footer>

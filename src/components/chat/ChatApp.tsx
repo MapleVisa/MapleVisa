@@ -53,7 +53,7 @@ export default function ChatApp({
   if (!isStaff) {
     return (
       <div className="card h-[70vh] overflow-hidden p-0">
-        <ChatThread meId={meId} headerName="Maple Visa team" />
+        <ChatThread meId={meId} headerName="AI Visa team" />
       </div>
     );
   }
