@@ -32,6 +32,8 @@ export default async function AdminCasePage({ params }: { params: { id: string }
     },
   });
   if (!app) redirect("/admin");
+  // Lawyers may only open cases assigned to them.
+  if (user.role === "LAWYER" && app.lawyerId !== user.id) redirect("/admin");
 
   const locale = await getLocale();
   const prog = (await localizeProgram(app.program, locale))!;

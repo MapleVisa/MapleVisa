@@ -12,9 +12,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (user.role !== "ADMIN" && user.role !== "LAWYER") redirect("/dashboard");
 
   const isLawyer = user.role === "LAWYER";
-  const baseWhere: any = isLawyer
-    ? { OR: [{ lawyerId: user.id }, { status: { in: ["VALIDATED", "WITH_LAWYER", "IN_PROCESSING"] } }] }
-    : { status: { not: "DRAFT" } };
+  // Lawyers only see their own assigned cases.
+  const baseWhere: any = isLawyer ? { lawyerId: user.id } : { status: { not: "DRAFT" } };
 
   const [dbUser, grouped, unread] = await Promise.all([
     prisma.user.findUnique({ where: { id: user.id }, select: { avatarKey: true } }),
@@ -23,7 +22,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   ]);
 
   const counts: Record<string, number> = {};
-  for (const g of grouped) counts[g.status] = g._count._all;
+  if (isLawyer) {
+    const byStatus: Record<string, number> = {};
+    for (const g of grouped) byStatus[g.status] = g._count._all;
+    counts.mine = (byStatus.WITH_LAWYER || 0) + (byStatus.IN_PROCESSING || 0);
+    counts.completed = (byStatus.APPROVED || 0) + (byStatus.REJECTED || 0);
+  } else {
+    for (const g of grouped) counts[g.status] = g._count._all;
+  }
 
   return (
     <AdminShell user={user} avatarKey={dbUser?.avatarKey} counts={counts} unread={unread}>

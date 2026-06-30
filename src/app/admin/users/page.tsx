@@ -120,7 +120,8 @@ export default async function AdminUsersPage({
               No users match {q ? `“${q}”` : "this filter"}.
             </div>
           ) : (
-            <table className="w-full text-left text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left text-sm">
               <thead className="border-b border-ink-200 bg-ink-50 text-xs uppercase tracking-wide text-ink-500">
                 <tr>
                   <th className="px-5 py-3">Name</th>
@@ -158,6 +159,7 @@ export default async function AdminUsersPage({
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
     </>

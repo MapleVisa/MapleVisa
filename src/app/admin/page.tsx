@@ -21,7 +21,7 @@ const STATUS_LABEL: Record<string, string> = {
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: { status?: string; q?: string };
+  searchParams: { status?: string; q?: string; view?: string };
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
@@ -34,15 +34,23 @@ export default async function AdminPage({
     d ? new Date(d).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" }) : "—";
 
   const isLawyer = user.role === "LAWYER";
-  const statusFilter = searchParams?.status && STATUS_LABEL[searchParams.status] ? searchParams.status : null;
   const q = (searchParams?.q || "").trim();
+  // Lawyers only see cases assigned to them, split into active vs completed.
+  const lawyerView = searchParams?.view === "completed" ? "completed" : "mine";
+  const statusFilter =
+    !isLawyer && searchParams?.status && STATUS_LABEL[searchParams.status] ? searchParams.status : null;
 
-  const baseWhere: any = isLawyer
-    ? { OR: [{ lawyerId: user.id }, { status: { in: ["VALIDATED", "WITH_LAWYER", "IN_PROCESSING"] } }] }
-    : { status: { not: "DRAFT" } };
+  const LAWYER_ACTIVE = ["WITH_LAWYER", "IN_PROCESSING"];
+  const LAWYER_DONE = ["APPROVED", "REJECTED"];
+
+  const baseWhere: any = isLawyer ? { lawyerId: user.id } : { status: { not: "DRAFT" } };
 
   const filters: any[] = [baseWhere];
-  if (statusFilter) filters.push({ status: statusFilter });
+  if (isLawyer) {
+    filters.push({ status: { in: lawyerView === "completed" ? LAWYER_DONE : LAWYER_ACTIVE } });
+  } else if (statusFilter) {
+    filters.push({ status: statusFilter });
+  }
   if (q)
     filters.push({
       OR: [
@@ -65,25 +73,39 @@ export default async function AdminPage({
 
   const counts: Record<string, number> = {};
   for (const g of grouped) counts[g.status] = g._count._all;
+  const lawyerMine = (counts.WITH_LAWYER || 0) + (counts.IN_PROCESSING || 0);
+  const lawyerDone = (counts.APPROVED || 0) + (counts.REJECTED || 0);
 
-  const statCards = (isLawyer
-    ? ["VALIDATED", "WITH_LAWYER", "IN_PROCESSING"]
-    : ["SUBMITTED", "UNDER_REVIEW", "VALIDATED", "WITH_LAWYER"]
-  ).map((k) => ({ key: k, label: STATUS_LABEL[k] }));
+  const statCards = isLawyer
+    ? [
+        { key: "mine", label: "My cases", count: lawyerMine, href: "/admin", active: lawyerView === "mine" },
+        { key: "completed", label: "Completed cases", count: lawyerDone, href: "/admin?view=completed", active: lawyerView === "completed" },
+      ]
+    : ["SUBMITTED", "UNDER_REVIEW", "VALIDATED", "WITH_LAWYER"].map((k) => ({
+        key: k,
+        label: STATUS_LABEL[k],
+        count: counts[k] || 0,
+        href: `/admin?status=${k}`,
+        active: statusFilter === k,
+      }));
 
   const heading = q
     ? `Search: “${q}”`
+    : isLawyer
+    ? lawyerView === "completed"
+      ? "Completed cases"
+      : "My cases"
     : statusFilter
     ? STATUS_LABEL[statusFilter]
-    : isLawyer
-    ? t.admin.lawyerTitle
     : t.admin.reviewTitle;
+
+  const showClear = !!q || !!statusFilter || (isLawyer && lawyerView === "completed");
 
   return (
     <>
       <div className="flex items-center gap-3">
         <h1 className="text-xl font-bold text-ink-900">{heading}</h1>
-        {(statusFilter || q) && (
+        {showClear && (
           <Link href="/admin" className="text-sm text-ink-400 hover:text-ink-700">
             Clear
           </Link>
@@ -91,16 +113,16 @@ export default async function AdminPage({
       </div>
 
       {!q && (
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className={`mt-5 grid grid-cols-2 gap-3 ${isLawyer ? "" : "sm:grid-cols-4"}`}>
           {statCards.map((s) => (
             <Link
               key={s.key}
-              href={`/admin?status=${s.key}`}
+              href={s.href}
               className={`rounded-xl bg-white px-4 py-3 transition hover:shadow-soft ${
-                statusFilter === s.key ? "ring-2 ring-brand-400" : "border border-ink-200"
+                s.active ? "ring-2 ring-brand-400" : "border border-ink-200"
               }`}
             >
-              <div className="text-2xl font-bold text-ink-900">{counts[s.key] || 0}</div>
+              <div className="text-2xl font-bold text-ink-900">{s.count}</div>
               <div className="text-xs text-ink-500">{s.label}</div>
             </Link>
           ))}
@@ -113,7 +135,8 @@ export default async function AdminPage({
             {q ? `No applications match “${q}”.` : t.admin.empty}
           </div>
         ) : (
-          <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px] text-left text-sm">
             <thead className="border-b border-ink-200 bg-ink-50 text-xs uppercase tracking-wide text-ink-500">
               <tr>
                 <th className="px-5 py-3">{t.admin.applicant}</th>
@@ -145,6 +168,7 @@ export default async function AdminPage({
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
