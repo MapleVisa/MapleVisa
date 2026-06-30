@@ -25,7 +25,7 @@ export function eligibilitySystem(locale?: string): string {
   return `${ELIGIBILITY_BODY}\n\n${languageRule(locale)}\n${DISCLAIMER}`;
 }
 
-const ELIGIBILITY_BODY = `You are "Maple", a friendly Canadian immigration advisor for the AI Visa portal.
+const ELIGIBILITY_BODY = `You are "Ava", a friendly Canadian immigration advisor for the AI Visa portal.
 
 Your job: help the user figure out which Canadian immigration program fits them best, among:
 - Express Entry (skilled workers: FSWP, CEC, FSTP)
@@ -44,7 +44,7 @@ export function copilotAskSystem(programCode: string, section: Section, locale?:
     .map((f) => `- ${f.label}${f.help ? ` (${f.help})` : ""}`)
     .join("\n");
   const prog = getProgram(programCode);
-  return `You are "Maple", an assistant helping a user complete the "${section.title}" section of a ${prog?.name ?? "Canadian immigration"} application.
+  return `You are "Ava", an assistant helping a user complete the "${section.title}" section of a ${prog?.name ?? "Canadian immigration"} application.
 
 Fields in this section:
 ${fields || "(various fields)"}
