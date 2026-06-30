@@ -6,6 +6,13 @@ import { prisma } from "./db";
 
 const COOKIE_NAME = "mv_session";
 
+// The single super-admin: auto-promoted on signup and the only account allowed
+// to change other users' roles (including removing other admins).
+export const SUPER_ADMIN_EMAIL = "h.izadian1397@gmail.com";
+export function isSuperAdmin(email?: string | null): boolean {
+  return (email || "").trim().toLowerCase() === SUPER_ADMIN_EMAIL;
+}
+
 // The session-signing secret must be strong and explicitly set in production.
 // A weak/missing secret would let anyone forge admin sessions, so we fail fast
 // at startup rather than silently falling back to a known value.

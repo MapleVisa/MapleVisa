@@ -8,6 +8,7 @@ import CaseActions from "@/components/CaseActions";
 import CaseAssistant from "@/components/ai/CaseAssistant";
 import DocumentsPanel from "@/components/DocumentsPanel";
 import AcceptAndAssign from "@/components/AcceptAndAssign";
+import DeleteApplicationButton from "@/components/DeleteApplicationButton";
 import MessageComposer from "@/components/MessageComposer";
 import MessageList from "@/components/MessageList";
 import { getCurrentUser } from "@/lib/auth";
@@ -155,6 +156,23 @@ export default async function AdminCasePage({ params }: { params: { id: string }
                 <Timeline events={app.events} />
               </div>
             </div>
+
+            {isAdmin && (
+              <div className="card border-brand-200 p-6">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-brand-500">
+                  Danger zone
+                </h3>
+                <p className="mt-2 text-xs text-ink-500">
+                  Permanently delete this application and all of its documents, messages and history.
+                </p>
+                <DeleteApplicationButton
+                  id={app.id}
+                  reference={app.reference}
+                  redirectTo="/admin"
+                  className="btn-secondary mt-3 w-full border-brand-200 text-brand-600 hover:bg-brand-50"
+                />
+              </div>
+            )}
           </aside>
         </div>
     </>

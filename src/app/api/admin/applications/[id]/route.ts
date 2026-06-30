@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { deleteAppFiles } from "@/lib/storage";
 
 const ALLOWED_STATUSES = [
   "UNDER_REVIEW",
@@ -84,5 +85,20 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     },
   });
 
+  return NextResponse.json({ ok: true });
+}
+
+// Permanently delete an application (admins only). Removes its uploaded files
+// and cascades to its documents, messages, events and conversations.
+export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  const app = await prisma.application.findUnique({ where: { id: params.id }, select: { id: true } });
+  if (!app) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  await deleteAppFiles(app.id);
+  await prisma.application.delete({ where: { id: app.id } });
   return NextResponse.json({ ok: true });
 }

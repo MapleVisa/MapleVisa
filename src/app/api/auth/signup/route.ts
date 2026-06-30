@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { createSession, hashPassword } from "@/lib/auth";
+import { createSession, hashPassword, SUPER_ADMIN_EMAIL } from "@/lib/auth";
 import { rateLimit, clientIp, tooMany } from "@/lib/rate-limit";
 import { createToken } from "@/lib/tokens";
 import { sendVerificationEmail, baseUrl } from "@/lib/email";
-
-// This email is granted ADMIN automatically and skips email verification.
-const AUTO_ADMIN_EMAIL = "h.izadian1397@gmail.com";
 
 export async function POST(req: Request) {
   const limit = await rateLimit(`signup:ip:${clientIp(req)}`, 5, 3600);
@@ -33,7 +30,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "An account with this email already exists." }, { status: 409 });
   }
 
-  const isAutoAdmin = email === AUTO_ADMIN_EMAIL;
+  const isAutoAdmin = email === SUPER_ADMIN_EMAIL;
   const user = await prisma.user.create({
     data: {
       email,

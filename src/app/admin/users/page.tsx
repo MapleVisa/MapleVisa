@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import RoleSelect from "@/components/RoleSelect";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, isSuperAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
 const ROLE_LABEL: Record<string, string> = {
@@ -27,6 +27,7 @@ export default async function AdminUsersPage({
   if (!user) redirect("/login");
   if (user.role !== "ADMIN") redirect("/admin");
 
+  const canManageRoles = isSuperAdmin(user.email);
   const roleParam = searchParams.role && ROLE_LABEL[searchParams.role] ? searchParams.role : undefined;
   const q = (searchParams.q || "").trim();
 
@@ -143,7 +144,11 @@ export default async function AdminUsersPage({
                     </td>
                     <td className="px-5 py-4 text-ink-600">{u.email}</td>
                     <td className="px-5 py-4">
-                      <RoleSelect userId={u.id} role={u.role} />
+                      {canManageRoles ? (
+                        <RoleSelect userId={u.id} role={u.role} />
+                      ) : (
+                        <span className="text-ink-700">{ROLE_LABEL[u.role] ?? u.role}</span>
+                      )}
                     </td>
                     <td className="px-5 py-4 text-ink-700">{u._count.applications}</td>
                     <td className="px-5 py-4 text-xs text-ink-500">{fmtDate(u.createdAt)}</td>

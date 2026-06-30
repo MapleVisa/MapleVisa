@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import StatusBadge from "@/components/StatusBadge";
+import DeleteApplicationButton from "@/components/DeleteApplicationButton";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { localizeProgramNames } from "@/lib/i18n/programs";
@@ -34,6 +35,7 @@ export default async function AdminPage({
     d ? new Date(d).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" }) : "—";
 
   const isLawyer = user.role === "LAWYER";
+  const isAdmin = user.role === "ADMIN";
   const q = (searchParams?.q || "").trim();
   // Lawyers only see cases assigned to them, split into active vs completed.
   const lawyerView = searchParams?.view === "completed" ? "completed" : "mine";
@@ -160,9 +162,19 @@ export default async function AdminPage({
                     <StatusBadge status={a.status} />
                   </td>
                   <td className="px-5 py-4 text-right">
-                    <Link href={`/admin/${a.id}`} className="font-semibold text-brand-600 hover:underline">
-                      {t.admin.open}
-                    </Link>
+                    <div className="flex items-center justify-end gap-3">
+                      <Link href={`/admin/${a.id}`} className="font-semibold text-brand-600 hover:underline">
+                        {t.admin.open}
+                      </Link>
+                      {isAdmin && (
+                        <DeleteApplicationButton
+                          id={a.id}
+                          reference={a.reference}
+                          label="Delete"
+                          className="text-sm font-semibold text-ink-400 hover:text-brand-600"
+                        />
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
