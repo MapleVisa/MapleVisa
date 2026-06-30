@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { getAbilities } from "@/lib/permissions";
 import { deleteAppFiles } from "@/lib/storage";
 
 const ALLOWED_STATUSES = [
@@ -24,6 +25,21 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (!app) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const body = await req.json().catch(() => null);
+
+  // Admins are gated by their granted abilities (lawyers use their own flow).
+  if (user.role === "ADMIN") {
+    const abilities = await getAbilities(user);
+    const wantsAccept =
+      body?.status === "VALIDATED" || typeof body?.lawyerId === "string" || body?.assignLawyer === true;
+    const wantsReview = (body?.status && body.status !== "VALIDATED") || typeof body?.reviewNote === "string";
+    if (wantsAccept && !abilities.has("accept")) {
+      return NextResponse.json({ error: "You don't have the 'accept & assign' ability." }, { status: 403 });
+    }
+    if (wantsReview && !abilities.has("review")) {
+      return NextResponse.json({ error: "You don't have the 'review cases' ability." }, { status: 403 });
+    }
+  }
+
   const updates: any = {};
   const events: { type: string; message: string; actor: string }[] = [];
 
@@ -94,6 +110,9 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
   const user = await getCurrentUser();
   if (!user || user.role !== "ADMIN") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  if (!(await getAbilities(user)).has("delete")) {
+    return NextResponse.json({ error: "You don't have the 'delete applications' ability." }, { status: 403 });
   }
   const app = await prisma.application.findUnique({ where: { id: params.id }, select: { id: true } });
   if (!app) return NextResponse.json({ error: "Not found" }, { status: 404 });

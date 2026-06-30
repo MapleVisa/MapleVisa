@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import AdminShell from "@/components/AdminShell";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, isSuperAdmin } from "@/lib/auth";
+import { ALL_ABILITIES, parsePermissions } from "@/lib/permissions";
 import { prisma } from "@/lib/db";
 import { unreadTeamCount } from "@/lib/messages";
 
@@ -16,7 +17,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const baseWhere: any = isLawyer ? { lawyerId: user.id } : { status: { not: "DRAFT" } };
 
   const [dbUser, grouped, unread] = await Promise.all([
-    prisma.user.findUnique({ where: { id: user.id }, select: { avatarKey: true } }),
+    prisma.user.findUnique({ where: { id: user.id }, select: { avatarKey: true, permissions: true } }),
     prisma.application.groupBy({ by: ["status"], _count: { _all: true }, where: baseWhere }),
     isLawyer ? Promise.resolve(0) : unreadTeamCount(),
   ]);
@@ -31,8 +32,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     for (const g of grouped) counts[g.status] = g._count._all;
   }
 
+  const abilities: string[] = isSuperAdmin(user.email)
+    ? [...ALL_ABILITIES]
+    : user.role === "ADMIN"
+    ? parsePermissions(dbUser?.permissions)
+    : [];
+
   return (
-    <AdminShell user={user} avatarKey={dbUser?.avatarKey} counts={counts} unread={unread}>
+    <AdminShell user={user} avatarKey={dbUser?.avatarKey} counts={counts} unread={unread} abilities={abilities}>
       {children}
     </AdminShell>
   );

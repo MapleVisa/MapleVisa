@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useT } from "@/i18n/IntlProvider";
 import PasswordStrength from "./PasswordStrength";
+import PasswordInput from "./PasswordInput";
 
 export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const router = useRouter();
@@ -140,11 +141,9 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
 
       <div>
         <label className="label" htmlFor="password">{t.auth.password}</label>
-        <input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
-          className="input"
           required
           minLength={mode === "signup" ? 8 : undefined}
           placeholder={mode === "signup" ? t.auth.passwordHint : "••••••••"}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import PasswordStrength from "./PasswordStrength";
+import PasswordInput from "./PasswordInput";
 
 export default function ResetForm({ token }: { token: string }) {
   const router = useRouter();
@@ -52,12 +53,12 @@ export default function ResetForm({ token }: { token: string }) {
       )}
       <div>
         <label className="label" htmlFor="password">New password</label>
-        <input id="password" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} className="input" placeholder="At least 8 characters" />
+        <PasswordInput id="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
         <PasswordStrength password={password} />
       </div>
       <div>
         <label className="label" htmlFor="confirm">Confirm password</label>
-        <input id="confirm" type="password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} className="input" placeholder="Re-enter your password" />
+        <PasswordInput id="confirm" required value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Re-enter your password" />
       </div>
       <button type="submit" disabled={busy} className="btn-primary w-full py-3">
         {busy ? "Updating…" : "Update password"}

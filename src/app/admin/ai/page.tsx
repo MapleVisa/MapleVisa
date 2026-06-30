@@ -1,6 +1,14 @@
+import { redirect } from "next/navigation";
 import AdminAIChat from "@/components/ai/AdminAIChat";
+import { getCurrentUser } from "@/lib/auth";
+import { getAbilities } from "@/lib/permissions";
 
-export default function AdminAIPage() {
+export default async function AdminAIPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  // Lawyers always have the assistant; admins need the "ai" ability.
+  if (user.role === "ADMIN" && !(await getAbilities(user)).has("ai")) redirect("/admin");
+
   return (
     <>
       <h1 className="text-xl font-bold text-ink-900">AI assistant</h1>

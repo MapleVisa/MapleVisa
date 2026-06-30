@@ -20,6 +20,7 @@ model User {
   address      String?
   avatarKey    String? // storage key of the profile image (served via /api/avatar/[id])
   role         String        @default("APPLICANT")
+  permissions  String? // JSON array of admin ability keys (granted by the super-admin)
   emailVerified DateTime? // null until the user verifies their email
   createdAt    DateTime      @default(now())
   applications Application[] @relation("OwnerApplications")

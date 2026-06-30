@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import RoleSelect from "@/components/RoleSelect";
+import AbilitiesEditor from "@/components/AbilitiesEditor";
 import { getCurrentUser, isSuperAdmin } from "@/lib/auth";
+import { ADMIN_ABILITIES, parsePermissions, getAbilities } from "@/lib/permissions";
 import { prisma } from "@/lib/db";
+
+const ABILITY_LIST = ADMIN_ABILITIES.map((a) => ({ key: a.key, label: a.label, hint: a.hint }));
 
 const ROLE_LABEL: Record<string, string> = {
   APPLICANT: "Applicant",
@@ -26,6 +30,7 @@ export default async function AdminUsersPage({
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   if (user.role !== "ADMIN") redirect("/admin");
+  if (!(await getAbilities(user)).has("users")) redirect("/admin");
 
   const canManageRoles = isSuperAdmin(user.email);
   const roleParam = searchParams.role && ROLE_LABEL[searchParams.role] ? searchParams.role : undefined;
@@ -51,6 +56,7 @@ export default async function AdminUsersPage({
       email: true,
       phone: true,
       role: true,
+      permissions: true,
       createdAt: true,
       _count: { select: { applications: true } },
     },
@@ -128,6 +134,7 @@ export default async function AdminUsersPage({
                   <th className="px-5 py-3">Name</th>
                   <th className="px-5 py-3">Email</th>
                   <th className="px-5 py-3">Role</th>
+                  {canManageRoles && <th className="px-5 py-3">Abilities</th>}
                   <th className="px-5 py-3">Applications</th>
                   <th className="px-5 py-3">Joined</th>
                   <th className="px-5 py-3"></th>
@@ -150,6 +157,19 @@ export default async function AdminUsersPage({
                         <span className="text-ink-700">{ROLE_LABEL[u.role] ?? u.role}</span>
                       )}
                     </td>
+                    {canManageRoles && (
+                      <td className="px-5 py-4">
+                        {u.role === "ADMIN" ? (
+                          <AbilitiesEditor
+                            userId={u.id}
+                            initial={parsePermissions(u.permissions)}
+                            abilities={ABILITY_LIST}
+                          />
+                        ) : (
+                          <span className="text-xs text-ink-400">—</span>
+                        )}
+                      </td>
+                    )}
                     <td className="px-5 py-4 text-ink-700">{u._count.applications}</td>
                     <td className="px-5 py-4 text-xs text-ink-500">{fmtDate(u.createdAt)}</td>
                     <td className="px-5 py-4 text-right">

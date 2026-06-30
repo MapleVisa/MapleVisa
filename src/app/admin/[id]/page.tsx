@@ -16,6 +16,7 @@ import { prisma } from "@/lib/db";
 import { localizeProgram } from "@/lib/i18n/programs";
 import { getLocale } from "@/i18n";
 import { validateApplication } from "@/lib/applications";
+import { getAbilities } from "@/lib/permissions";
 import { requiredDocsForProgram } from "@/lib/documents";
 import { listMessagesForApplication } from "@/lib/messages";
 
@@ -43,6 +44,13 @@ export default async function AdminCasePage({ params }: { params: { id: string }
   const maxMb = Number(process.env.MAX_UPLOAD_MB) || 10;
 
   const isAdmin = user.role === "ADMIN";
+  const isLawyer = user.role === "LAWYER";
+  const abilities = await getAbilities(user);
+  const canReview = abilities.has("review");
+  const canAccept = abilities.has("accept");
+  const canDelete = abilities.has("delete");
+  const canAi = abilities.has("ai");
+  const canMessage = abilities.has("messages");
   const messages = await listMessagesForApplication(app.id);
 
   // Application-level readiness: every required field complete and every required
@@ -108,19 +116,23 @@ export default async function AdminCasePage({ params }: { params: { id: string }
                 <MessageList messages={messages} viewerIsStaff emptyText="No messages with this applicant yet." />
               </div>
             </div>
-            <MessageComposer
-              toUserId={app.userId}
-              applicationId={app.id}
-              title="Message the applicant"
-              placeholder="Inform the applicant about their case, request something, or share an update…"
-            />
+            {(isLawyer || canMessage) && (
+              <MessageComposer
+                toUserId={app.userId}
+                applicationId={app.id}
+                title="Message the applicant"
+                placeholder="Inform the applicant about their case, request something, or share an update…"
+              />
+            )}
           </div>
 
           {/* Right: actions + AI + validation + timeline */}
           <aside className="space-y-6 lg:sticky lg:top-20 lg:self-start">
-            {isAdmin && <AcceptAndAssign id={app.id} status={app.status} readiness={readiness} />}
-            <CaseActions id={app.id} role={user.role as "ADMIN" | "LAWYER"} status={app.status} />
-            <CaseAssistant applicationId={app.id} />
+            {isAdmin && canAccept && <AcceptAndAssign id={app.id} status={app.status} readiness={readiness} />}
+            {(isLawyer || canReview) && (
+              <CaseActions id={app.id} role={user.role as "ADMIN" | "LAWYER"} status={app.status} />
+            )}
+            {(isLawyer || canAi) && <CaseAssistant applicationId={app.id} />}
 
             <div className="card p-6">
               <h3 className="text-sm font-semibold uppercase tracking-wide text-ink-400">
@@ -157,7 +169,7 @@ export default async function AdminCasePage({ params }: { params: { id: string }
               </div>
             </div>
 
-            {isAdmin && (
+            {isAdmin && canDelete && (
               <div className="card border-brand-200 p-6">
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-brand-500">
                   Danger zone

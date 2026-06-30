@@ -73,18 +73,27 @@ export default function AdminShell({
   avatarKey,
   counts,
   unread,
+  abilities = [],
   children,
 }: {
   user: ShellUser;
   avatarKey?: string | null;
   counts: Record<string, number>;
   unread: number;
+  abilities?: string[];
   children: React.ReactNode;
 }) {
   const path = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const isLawyer = user.role === "LAWYER";
   const isAdmin = user.role === "ADMIN";
+
+  // Which admin areas this user may see. Lawyers keep Chat + AI; the Users area
+  // and admin Chat/AI are gated by the abilities the super-admin granted.
+  const has = (k: string) => abilities.includes(k);
+  const canUsersNav = isAdmin && has("users");
+  const canMessagesNav = isLawyer || has("messages");
+  const canAiNav = isLawyer || has("ai");
 
   const inUsers = path.startsWith("/admin/users");
   const inMessages = path.startsWith("/admin/messages");
@@ -110,9 +119,9 @@ export default function AdminShell({
 
   const railItems = [
     { href: "/admin", label: "Queue", icon: "grid" as const, active: inQueue },
-    ...(isAdmin ? [{ href: "/admin/users", label: "Users", icon: "users" as const, active: inUsers }] : []),
-    { href: "/admin/messages", label: "Chat", icon: "message" as const, active: inMessages },
-    { href: "/admin/ai", label: "AI", icon: "ai" as const, active: inAI },
+    ...(canUsersNav ? [{ href: "/admin/users", label: "Users", icon: "users" as const, active: inUsers }] : []),
+    ...(canMessagesNav ? [{ href: "/admin/messages", label: "Chat", icon: "message" as const, active: inMessages }] : []),
+    ...(canAiNav ? [{ href: "/admin/ai", label: "AI", icon: "ai" as const, active: inAI }] : []),
   ];
 
   const navCls = (active: boolean) =>
@@ -128,20 +137,24 @@ export default function AdminShell({
         <Link href="/admin" className={navCls(inQueue)} onClick={onNavigate}>
           <Icon name="grid" className="h-4 w-4" /> Review queue
         </Link>
-        {isAdmin && (
+        {canUsersNav && (
           <Link href="/admin/users" className={navCls(inUsers)} onClick={onNavigate}>
             <Icon name="users" className="h-4 w-4" /> Users
           </Link>
         )}
-        <Link href="/admin/messages" className={navCls(inMessages)} onClick={onNavigate}>
-          <Icon name="message" className="h-4 w-4" /> Messages
-          {unread > 0 && (
-            <span className="ms-auto rounded-full bg-brand-600 px-1.5 text-xs font-bold text-white">{unread}</span>
-          )}
-        </Link>
-        <Link href="/admin/ai" className={navCls(inAI)} onClick={onNavigate}>
-          <Icon name="ai" className="h-4 w-4" /> AI assistant
-        </Link>
+        {canMessagesNav && (
+          <Link href="/admin/messages" className={navCls(inMessages)} onClick={onNavigate}>
+            <Icon name="message" className="h-4 w-4" /> Messages
+            {unread > 0 && (
+              <span className="ms-auto rounded-full bg-brand-600 px-1.5 text-xs font-bold text-white">{unread}</span>
+            )}
+          </Link>
+        )}
+        {canAiNav && (
+          <Link href="/admin/ai" className={navCls(inAI)} onClick={onNavigate}>
+            <Icon name="ai" className="h-4 w-4" /> AI assistant
+          </Link>
+        )}
       </div>
 
       <div className="px-4 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wide text-ink-400">Queues</div>

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import StatusBadge from "@/components/StatusBadge";
 import DeleteApplicationButton from "@/components/DeleteApplicationButton";
 import { getCurrentUser } from "@/lib/auth";
+import { getAbilities } from "@/lib/permissions";
 import { prisma } from "@/lib/db";
 import { localizeProgramNames } from "@/lib/i18n/programs";
 import { getDictionary, getLocale } from "@/i18n";
@@ -36,6 +37,7 @@ export default async function AdminPage({
 
   const isLawyer = user.role === "LAWYER";
   const isAdmin = user.role === "ADMIN";
+  const canDelete = isAdmin && (await getAbilities(user)).has("delete");
   const q = (searchParams?.q || "").trim();
   // Lawyers only see cases assigned to them, split into active vs completed.
   const lawyerView = searchParams?.view === "completed" ? "completed" : "mine";
@@ -166,7 +168,7 @@ export default async function AdminPage({
                       <Link href={`/admin/${a.id}`} className="font-semibold text-brand-600 hover:underline">
                         {t.admin.open}
                       </Link>
-                      {isAdmin && (
+                      {canDelete && (
                         <DeleteApplicationButton
                           id={a.id}
                           reference={a.reference}

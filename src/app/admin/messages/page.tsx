@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import ChatApp from "@/components/chat/ChatApp";
 import { getCurrentUser } from "@/lib/auth";
+import { getAbilities } from "@/lib/permissions";
 import { prisma } from "@/lib/db";
 
 export default async function AdminMessagesPage({
@@ -11,6 +12,8 @@ export default async function AdminMessagesPage({
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   if (user.role !== "ADMIN" && user.role !== "LAWYER") redirect("/messages");
+  // Lawyers always have chat; admins need the "messages" ability.
+  if (user.role === "ADMIN" && !(await getAbilities(user)).has("messages")) redirect("/admin");
 
   // Deep-link to a specific applicant's chat via ?with=<userId>.
   let initialActiveId: string | null = null;
