@@ -109,7 +109,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
       {mode === "signup" && (
         <div>
           <label className="label" htmlFor="fullName">{t.auth.fullName}</label>
-          <input id="fullName" name="fullName" className="input" required placeholder="Hamed Izadian" />
+          <input id="fullName" name="fullName" className="input" required placeholder="John Smith" />
         </div>
       )}
 
