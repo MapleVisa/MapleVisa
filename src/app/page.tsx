@@ -21,6 +21,12 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Training / demo disclaimer */}
+      <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-xs text-amber-800 sm:text-sm">
+        ⚠️ This website is for training and demonstration purposes only. AI Visa does not provide legal
+        advice and does not take on real immigration cases.
+      </div>
+
       <header className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Logo />
         <nav className="flex items-center gap-2">
@@ -115,9 +121,14 @@ export default async function Home() {
       <footer className="border-t border-ink-200 py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 sm:flex-row sm:px-6">
           <Logo />
-          <p className="text-sm text-ink-400">
-            © {new Date().getFullYear()} AI Visa. {t.landing.footerNote}
-          </p>
+          <div className="text-center sm:text-end">
+            <p className="text-sm text-ink-400">
+              © {new Date().getFullYear()} AI Visa. {t.landing.footerNote}
+            </p>
+            <p className="mt-1 text-xs text-ink-400">
+              For training and demonstration only — not legal advice, no real cases handled.
+            </p>
+          </div>
         </div>
       </footer>
     </div>
